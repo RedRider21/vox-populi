@@ -56,6 +56,11 @@
       <code>~/.local/share/vox-populi/</code>, una cartella sola che puoi
       cancellare quando vuoi.
     </p>
+    <p>
+      Installando dal <strong>pacchetto .deb</strong> si aggiungono le librerie
+      Python, che non esistono come pacchetti Debian: altri
+      <strong>~1,5 GB</strong>. Anche qui: prima dice quanto pesa, poi chiede.
+    </p>
   </div>
 
   <div class="griglia due">
@@ -185,7 +190,16 @@
 
 <section id="installazione">
   <h2>Installazione</h2>
-  <p>Su Debian, Ubuntu e affini:</p>
+
+  <p><strong>Dal pacchetto (consigliato).</strong> Scarica
+  <code>vox-populi_0.1.0_all.deb</code> dalla
+  <a href="https://github.com/RedRider21/vox-populi/releases/latest">pagina delle
+  release</a> e aprilo con doppio clic: si installa come qualsiasi altro
+  programma, senza terminale, e compare nel menu delle applicazioni. Le librerie
+  Python se le prepara da sé al primo avvio. Per prepararle in anticipo:</p>
+<pre><code>vox-populi --prepara</code></pre>
+
+  <p><strong>Dal sorgente.</strong> Su Debian, Ubuntu e affini:</p>
 <pre><code>git clone https://github.com/RedRider21/vox-populi
 cd vox-populi
 ./install.sh</code></pre>
@@ -202,12 +216,16 @@ cd vox-populi
     <tr><td>Trascrizione — Whisper <code>small</code></td><td><code>~/.local/share/vox-populi/whisper/</code></td><td>~465 MB</td></tr>
     <tr><td>Traduzione italiano ↔ inglese</td><td><code>~/.local/share/vox-populi/modelli/</code></td><td>~190 MB</td></tr>
     <tr><td><strong>Totale al primo avvio</strong></td><td></td><td><strong>~655 MB</strong></td></tr>
+    <tr><td>Librerie Python in più, solo dal pacchetto</td><td><code>~/.local/share/vox-populi/venv/</code></td><td>~1,5 GB</td></tr>
   </table>
   <p>
     Tutto sta in una cartella sola: preferenze, elenco delle voci, modelli di
-    traduzione e modello di trascrizione. Si copia su un'altra macchina e il
-    programma è già configurato; si cancella e non resta niente. Per
-    disinstallare basta <code>rm -rf ~/.local/share/vox-populi</code>.
+    traduzione, modello di trascrizione e — se installato dal pacchetto — le
+    librerie Python. Si copia su un'altra macchina e il programma è già
+    configurato; si cancella e non resta niente. Dal pacchetto si disinstalla con
+    <code>sudo apt remove vox-populi</code>, dal sorgente cancellando la cartella
+    del progetto; in entrambi i casi
+    <code>rm -rf ~/.local/share/vox-populi</code> porta via i dati.
   </p>
 
   <h3>Requisiti</h3>

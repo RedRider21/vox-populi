@@ -93,7 +93,7 @@ la parte lenta, ma il programma si riprende senza riavviare Meet.
 continuo o se due voci si sovrappongono. Fai una pausa di qualche secondo e
 riprendi: il rilevatore di voce si ricalibra da solo sul rumore di fondo.
 
-**Il programma si è chiuso del tutto.** Riaprilo con `./vox-populi`, ricondividi
+**Il programma si è chiuso del tutto.** Riaprilo con `vox-populi` (o `./vox-populi` se lo avvii dal sorgente), ricondividi
 la finestra in Meet. La call non si interrompe: perdi solo qualche secondo.
 
 **Non capisci proprio una frase.** Chiedi di ripetere:
@@ -126,7 +126,7 @@ salvate per la prossima volta.
 
 ## Riepilogo in quattro righe
 
-1. `./vox-populi`, controlla lingue e dispositivi, premi **Avvia**
+1. `vox-populi` (dal sorgente: `./vox-populi`), controlla lingue e dispositivi, premi **Avvia**
 2. Nella call condividi la finestra **"Vox Populi - leggere qui"**
 3. Se usi la voce: spunta **Voce** e scegli `Monitor of VoxPopuli_Mic` come
    microfono

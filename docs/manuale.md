@@ -65,13 +65,31 @@ servono **circa 655 MB**:
 Ogni lingua in più costa circa **190 MB per direzione** e si scarica dall'app,
 non da qui. La coppia italiano/inglese è inclusa nell'installazione.
 
+Se installi dal **pacchetto .deb** si aggiungono le librerie Python, che non
+esistono come pacchetti Debian e finiscono in una cartella dell'utente:
+
+| Cosa | Spazio |
+|---|---|
+| `torch`, nella variante per CPU (quella per le schede video è il doppio e qui non serve) | ~750 MB |
+| `faster-whisper`, `argostranslate`, `edge-tts` e le loro dipendenze | ~750 MB |
+
 **Non parte mai un download da solo**: `install.sh` dichiara quanto scaricherà
-e chiede conferma; dall'app i modelli si scaricano solo premendo **Installa
-modelli**.
+e chiede conferma; l'avvio dal pacchetto dice quanto pesano le librerie e
+chiede conferma pure lui, con una finestra se non c'è un terminale; dall'app i
+modelli si scaricano solo premendo **Installa modelli**.
 
 ### Procedura
 
-Su Debian, Ubuntu e affini:
+**Dal pacchetto (consigliato).** Scarica `vox-populi_0.1.0_all.deb` dalla
+pagina delle release e aprilo con doppio clic: si installa come qualsiasi altro
+programma, senza terminale, e compare nel menu delle applicazioni. Al primo
+avvio prepara da sé le librerie Python. Se preferisci prepararle in anticipo:
+
+```bash
+vox-populi --prepara
+```
+
+**Dal sorgente.** Su Debian, Ubuntu e affini:
 
 ```bash
 ./install.sh
@@ -97,7 +115,8 @@ In **una cartella sola**, `~/.local/share/vox-populi/`:
 ├── config.json     preferenze (dispositivi, lingue, tema, posizione finestre)
 ├── voci.json       elenco delle voci sintetiche, aggiornato da solo
 ├── modelli/        pacchetti di traduzione
-└── whisper/        modello di trascrizione
+├── whisper/        modello di trascrizione
+└── venv/           librerie Python (solo se installato dal pacchetto)
 ```
 
 Si copia su un'altra macchina e il programma è già configurato; si cancella e
@@ -106,21 +125,38 @@ non resta niente. Il percorso si può spostare con la variabile d'ambiente
 
 ### Disinstallare
 
+Dal pacchetto:
+
 ```bash
-rm -rf ~/.local/share/vox-populi      # modelli e preferenze
+sudo apt remove vox-populi            # il programma
+rm -rf ~/.local/share/vox-populi      # modelli, preferenze e librerie
 ```
 
-Il programma in sé è la cartella del progetto: cancellala e basta. Non viene
-installato nulla nel sistema, a parte le librerie Python e i pacchetti di
-sistema elencati sopra.
+`apt remove` toglie solo il programma: modelli, preferenze e le librerie Python
+restano dove sono, perché sono nella cartella dell'utente e valgono un paio di
+GB di download. Se non servono più, la seconda riga li cancella tutti insieme.
+
+Dal sorgente il programma è la cartella del progetto: cancellala, e poi la
+stessa riga per i dati dell'utente.
 
 ---
 
 ## 3. Avvio e primo uso
 
+Dal pacchetto basta **Vox Populi** nel menu delle applicazioni, oppure:
+
+```bash
+vox-populi
+```
+
+Dal sorgente:
+
 ```bash
 ./vox-populi
 ```
+
+Al primo avvio, se installato dal pacchetto, il programma prepara le librerie
+Python; lo fa una volta sola e dice quanto pesa prima di cominciare.
 
 Si aprono due finestre:
 
@@ -379,7 +415,8 @@ Le immagini finiscono in `/tmp` per impostazione predefinita.
 - Sessione **X11** — su Wayland la finestra sempre-in-alto può non funzionare
 - Python 3.10 o superiore, PyGObject e GTK 3
 - Una CPU decente: la trascrizione gira su processore, senza GPU
-- ~700 MB liberi per i modelli
+- ~700 MB liberi per i modelli, e altri ~1,5 GB se installi dal pacchetto,
+  che si porta dietro le librerie Python
 
 ---
 

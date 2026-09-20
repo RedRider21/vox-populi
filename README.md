@@ -107,12 +107,29 @@ Per una conversazione normale, i sottotitoli da soli sono più reattivi.
 
 ## Installazione
 
-> **Prima di iniziare: il programma scarica circa 655 MB di modelli.**
-> Non sono nel repository e non sono opzionali — senza, non trascrive e non
-> traduce. Lo script lo dice e chiede conferma prima di scaricare qualcosa.
-> Per procedere senza domande (script automatici): `./install.sh --si`.
+> **Prima di iniziare: al primo avvio vengono scaricati circa 655 MB di
+> modelli** e, se installi dal pacchetto, circa 1,5 GB di librerie Python.
+> Non sono nel repository e non sono opzionali. In nessun caso parte un
+> download senza che ti venga prima detto quanto pesa e chiesto il permesso.
 
-Su Debian/Ubuntu e affini:
+Ci sono due strade e portano allo stesso programma: cambia solo chi prepara le
+librerie Python.
+
+### Dal pacchetto (consigliato)
+
+Scarica `vox-populi_0.1.0_all.deb` dalla pagina delle
+**[release](https://github.com/RedRider21/vox-populi/releases/latest)** e
+aprilo con doppio clic: si installa come qualsiasi altro programma, senza
+terminale, e compare nel menu delle applicazioni.
+
+Le librerie Python se le prepara da sé al primo avvio, in una cartella sua
+dentro `~/.local/share/vox-populi/`, dicendo prima quanto pesa. Se preferisci
+prepararle in anticipo, senza aprire l'interfaccia, c'è `vox-populi --prepara`.
+
+Il pacchetto è `all`, cioè indipendente dall'architettura: vale per i PC a 64
+bit Intel/AMD come per quelli ARM.
+
+### Dal sorgente
 
 ```bash
 ./install.sh
@@ -121,6 +138,7 @@ Su Debian/Ubuntu e affini:
 Lo script installa i pacchetti di sistema mancanti (`python3-gi`,
 `pulseaudio-utils`, `ffmpeg`), le dipendenze Python e i modelli, poi esegue una
 diagnosi. È idempotente: rilanciarlo non fa danni e non riscarica nulla.
+Per procedere senza domande (script automatici): `./install.sh --si`.
 
 ### Cosa viene scaricato
 
@@ -128,7 +146,16 @@ diagnosi. È idempotente: rilanciarlo non fa danni e non riscarica nulla.
 |---|---|---|
 | Trascrizione — Whisper `small` | `~/.local/share/vox-populi/whisper/` | ~465 MB |
 | Traduzione italiano ↔ inglese | `~/.local/share/vox-populi/modelli/` | ~190 MB |
-| **Totale al primo avvio** | | **~655 MB** |
+| **Totale dei modelli** | | **~655 MB** |
+
+Solo se installi dal pacchetto, si aggiungono le librerie Python, che finiscono
+in `~/.local/share/vox-populi/venv`:
+
+| Cosa | Spazio |
+|---|---|
+| `torch`, nella variante per CPU (quella per le schede video è il doppio e non serve) | ~750 MB |
+| `faster-whisper`, `argostranslate`, `edge-tts` e le loro dipendenze | ~750 MB |
+| **Totale delle librerie** | **~1,5 GB** |
 
 Ogni lingua in più rispetto alla coppia italiano/inglese costa circa 190 MB per
 direzione, e si scarica dall'app con **Installa modelli**, non da `install.sh`.
@@ -276,7 +303,10 @@ vox-populi
 │   ├── cli.py           prove da terminale
 │   └── ui/              pannello, finestra condivisa, foglio di stile
 ├── docs/guida-call.md   promemoria passo-passo per il giorno della call
-├── tools/               script di collaudo della cattura audio
+├── data/                icone, voce di menu, pagina di manuale
+├── tools/
+│   ├── make-deb.sh      costruisce il pacchetto .deb
+│   └── ...              script di collaudo della cattura audio
 ├── install.sh
 ├── requirements.txt
 ├── LICENSE              GNU AGPL v3.0

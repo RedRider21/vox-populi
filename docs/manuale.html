@@ -95,9 +95,15 @@
       dall'applicazione, non da qui. La coppia italiano/inglese è inclusa.
     </p>
     <p>
+      Se installi dal <strong>pacchetto .deb</strong> si aggiungono le librerie
+      Python, che non esistono come pacchetti Debian: altri <strong>~1,5 GB</strong>,
+      in una cartella dell'utente.
+    </p>
+    <p>
       <strong>Non parte mai un download da solo</strong>: <code>install.sh</code>
-      dichiara quanto scaricherà e chiede conferma; dall'app i modelli si
-      scaricano solo premendo <em>Installa modelli</em>.
+      dichiara quanto scaricherà e chiede conferma, e lo stesso fa l'avvio dal
+      pacchetto; dall'app i modelli si scaricano solo premendo
+      <em>Installa modelli</em>.
     </p>
   </div>
 
@@ -105,10 +111,22 @@
     <tr><th>Cosa</th><th>Dove</th><th>Spazio</th></tr>
     <tr><td>Trascrizione (Whisper <code>small</code>)</td><td><code>~/.local/share/vox-populi/whisper/</code></td><td>~465 MB</td></tr>
     <tr><td>Traduzione italiano ↔ inglese</td><td><code>~/.local/share/vox-populi/modelli/</code></td><td>~190 MB</td></tr>
+    <tr><td><code>torch</code> per CPU (solo dal pacchetto)</td><td><code>~/.local/share/vox-populi/venv/</code></td><td>~750 MB</td></tr>
+    <tr><td><code>faster-whisper</code>, <code>argostranslate</code>, <code>edge-tts</code> (solo dal pacchetto)</td><td><code>~/.local/share/vox-populi/venv/</code></td><td>~750 MB</td></tr>
   </table>
 
   <h3>Procedura</h3>
-  <p>Su Debian, Ubuntu e affini:</p>
+
+  <p><strong>Dal pacchetto (consigliato).</strong> Scarica
+  <code>vox-populi_0.1.0_all.deb</code> dalla
+  <a href="https://github.com/RedRider21/vox-populi/releases/latest">pagina delle
+  release</a> e aprilo con doppio clic: si installa come qualsiasi altro
+  programma, senza terminale, e compare nel menu delle applicazioni. Al primo
+  avvio prepara da sé le librerie Python. Per prepararle in anticipo, senza
+  aprire l'interfaccia:</p>
+<pre><code>vox-populi --prepara</code></pre>
+
+  <p><strong>Dal sorgente.</strong> Su Debian, Ubuntu e affini:</p>
 <pre><code>git clone https://github.com/RedRider21/vox-populi
 cd vox-populi
 ./install.sh</code></pre>
@@ -129,7 +147,8 @@ cd vox-populi
 ├── config.json     preferenze (dispositivi, lingue, tema, posizione finestre)
 ├── voci.json       elenco delle voci sintetiche, aggiornato da solo
 ├── modelli/        pacchetti di traduzione
-└── whisper/        modello di trascrizione</code></pre>
+├── whisper/        modello di trascrizione
+└── venv/           librerie Python (solo se installato dal pacchetto)</code></pre>
   <p>
     Si copia su un'altra macchina e il programma è già configurato; si cancella e
     non resta niente. Il percorso si può spostare con la variabile d'ambiente
@@ -137,16 +156,26 @@ cd vox-populi
   </p>
 
   <h3>Disinstallare</h3>
-<pre><code>rm -rf ~/.local/share/vox-populi      # modelli e preferenze</code></pre>
+  <p>Dal pacchetto:</p>
+<pre><code>sudo apt remove vox-populi            # il programma
+rm -rf ~/.local/share/vox-populi      # modelli, preferenze e librerie</code></pre>
   <p>
-    Il programma in sé è la cartella del progetto: cancellala e basta. Non viene
-    installato nulla nel sistema, a parte le librerie Python e i pacchetti di
-    sistema elencati sopra.
+    <code>apt remove</code> toglie solo il programma: modelli, preferenze e le
+    librerie Python restano dove sono, perché stanno nella cartella dell'utente e
+    valgono un paio di GB di download. Se non servono più, la seconda riga li
+    cancella tutti insieme.
+  </p>
+  <p>
+    Dal sorgente il programma è la cartella del progetto: cancellala, e poi la
+    stessa riga per i dati dell'utente.
   </p>
 </section>
 
 <section id="avvio">
   <h2>3. Avvio e primo uso</h2>
+  <p>Dal pacchetto basta <strong>Vox Populi</strong> nel menu delle applicazioni, oppure:</p>
+<pre><code>vox-populi</code></pre>
+  <p>Dal sorgente:</p>
 <pre><code>./vox-populi</code></pre>
   <p>Si aprono due finestre:</p>
   <ul>
