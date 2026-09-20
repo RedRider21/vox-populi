@@ -226,18 +226,30 @@ uccisa di forza, i moduli possono restare. Si tolgono con
 `pactl list modules short | grep -E 'null-sink|loopback'` per trovare gli
 indici, poi `pactl unload-module <indice>`.
 
-## Licenza
+## Licenza e autore
+
+Copyright (C) 2026 **Daniele Deplano (RedRider21)**.
 
 Vox Populi è software libero distribuito sotto **GNU Affero General Public
 License v3.0 o successiva** (`AGPL-3.0-or-later`): puoi usarlo, studiarlo,
 modificarlo e ridistribuirlo, a condizione di rispettare gli obblighi di
 copyleft — ogni opera derivata resta sotto la stessa licenza, e chi offre il
 programma come servizio in rete deve rendere disponibile il sorgente ai propri
-utenti.
+utenti. Il testo completo è in [`LICENSE`](LICENSE); l'enunciazione d'autore e
+l'elenco delle licenze delle dipendenze sono in [`COPYRIGHT`](COPYRIGHT).
 
-In alternativa è disponibile una **licenza commerciale** per chi vuole
-integrare o distribuire Vox Populi in prodotti o servizi proprietari, senza
-gli obblighi dell'AGPLv3: vedi [`COMMERCIAL.md`](COMMERCIAL.md).
+In alternativa è disponibile una **licenza commerciale** (doppia licenza) per
+chi vuole integrare o distribuire Vox Populi in prodotti o servizi
+proprietari, senza gli obblighi dell'AGPLv3: vedi
+[`COMMERCIAL.md`](COMMERCIAL.md).
 
-Il testo completo è in [`LICENSE`](LICENSE), l'attribuzione in
-[`COPYRIGHT`](COPYRIGHT).
+Il nome «Vox Populi» e l'identità visiva del progetto sono di Daniele Deplano
+(RedRider21) e non sono concessi dalla licenza del software.
+
+Progetto e sviluppo: **Daniele Deplano (RedRider21)** —
+[github.com/RedRider21](https://github.com/RedRider21) — deplano.d@gmail.com
+
+Segnalazioni, proposte e correzioni sono benvenute: apri una
+[issue](https://github.com/RedRider21/vox-populi/issues) sul repository.
+
+Copyright (C) 2026 Daniele Deplano (RedRider21).
