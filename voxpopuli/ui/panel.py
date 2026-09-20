@@ -242,13 +242,14 @@ class FinestraPannello(Gtk.Window):
 
         riga3 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         self._check_voce = Gtk.CheckButton(
-            label="Voce inglese: l'interlocutore sente la traduzione"
+            label="Voce: l'interlocutore sente la traduzione"
         )
         self._check_voce.get_style_context().add_class("dettaglio")
         self._check_voce.set_active(bool(self.cfg.get("voice_enabled", False)))
         self._check_voce.set_tooltip_text(
-            "Sostituisce la tua voce con una sintetica in inglese. Mentre parli "
-            "l'interlocutore sente un breve silenzio, poi la frase in inglese."
+            "Sostituisce la tua voce con una sintetica nella lingua "
+            "dell'interlocutore. Mentre parli lui sente un breve silenzio, poi "
+            "la frase tradotta."
         )
         self._check_voce.connect("toggled", self._su_voce)
         riga3.pack_start(self._check_voce, False, False, 0)

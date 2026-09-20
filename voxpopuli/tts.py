@@ -61,6 +61,14 @@ VOCI_FALLBACK: dict[str, dict[str, str]] = {
 # l'accento che l'interlocutore di Mumbai si aspetta di sentire.
 VOCE_PREDEFINITA = "en-IN-PrabhatNeural"
 
+# Le tre lingue in cui il codice di argostranslate non e' il prefisso delle
+# voci. Vedi _prefissi() per la spiegazione.
+LOCALI_VOCI: dict[str, tuple[str, ...]] = {
+    "pb": ("pt-BR",),
+    "zt": ("zh-TW", "zh-HK"),
+    "zh": ("zh-CN",),
+}
+
 # Paese dedotto dal codice regione del locale (en-IN -> India), per rendere
 # leggibile il nome della voce. Non serve coprire il mondo: per i codici non
 # presenti si mostra il codice stesso, che resta comprensibile.
@@ -335,13 +343,29 @@ def elenco_voci(forza: bool = False) -> list[dict]:
     return elenco
 
 
+def _prefissi(codice: str) -> tuple[str, ...]:
+    """Prefissi di locale da accettare per una lingua dell'app.
+
+    Quasi sempre il codice di argostranslate e' anche quello delle voci
+    ("it" -> "it-IT"), e basta il prefisso. Tre casi no, e senza questa
+    tabella il menu delle voci resterebbe vuoto pur esistendo le voci:
+
+      pb  argos usa "pb" per il portoghese brasiliano, le voci dicono "pt-BR"
+      zt  argos usa "zt" per il cinese tradizionale, le voci "zh-TW"/"zh-HK"
+      zh  il cinese semplificato deve prendere solo "zh-CN"; col prefisso
+          secco "zh-" comparivano anche le voci di Taiwan e Hong Kong
+    """
+    return LOCALI_VOCI.get(codice) or (f"{codice}-",)
+
+
 def voci_per_lingua(codice: str, forza: bool = False) -> dict[str, str]:
     """Voci pronunciabili in una lingua: {nome_tecnico: descrizione leggibile}."""
     elenco = elenco_voci(forza)
+    prefissi = _prefissi(codice)
     trovate = {
         str(v.get("ShortName")): _descrizione(v)
         for v in elenco
-        if str(v.get("Locale", "")).startswith(f"{codice}-")
+        if str(v.get("Locale", "")).startswith(prefissi)
     }
     if trovate:
         return dict(sorted(trovate.items(), key=lambda coppia: coppia[1]))

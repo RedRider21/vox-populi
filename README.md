@@ -41,6 +41,37 @@ Tutto gira sul tuo computer: nessun dato viene inviato a servizi esterni,
 nessuna chiave API, nessun abbonamento. Dopo il primo avvio funziona anche
 senza connessione.
 
+## Come si presenta
+
+Il **pannello**, che resta sopra Meet e vedi solo tu. In alto la traduzione di
+quello che dice l'interlocutore, in basso la tua — con l'originale in piccolo
+sopra, la traduzione in grande sotto:
+
+![Pannello con la conversazione in corso](docs/img/pannello.png)
+
+La **finestra per lui**, quella che condividi in Meet con *Condividi una
+finestra*. Testo molto grande, alto contrasto, le ultime frasi che scorrono:
+
+![Finestra condivisa con le frasi tradotte](docs/img/speaker.png)
+
+Con la voce sintetica accesa il pannello mostra anche quale voce è in uso e
+quale microfono scegliere in Meet:
+
+![Pannello con la voce sintetica attiva](docs/img/pannello-voce.png)
+
+### Sei schemi di colore
+
+Si scelgono da **Colori** e si applicano subito, anche a finestre già aperte e
+a quella che stai condividendo. Servono a leggere meglio: c'è chi lavora al
+buio, chi in pieno sole, e chi ha bisogno del massimo contrasto.
+
+| | | |
+|---|---|---|
+| ![Chiaro](docs/img/tema-chiaro.png) | ![Ambra](docs/img/tema-ambra.png) | ![Verde](docs/img/tema-verde.png) |
+| Chiaro | Ambra (terminale) | Verde fosforo |
+| ![Notte](docs/img/tema-notte.png) | ![Alto contrasto](docs/img/tema-contrasto.png) | |
+| Notte (viola) | Alto contrasto | |
+
 ## Cosa sente e cosa vede l'interlocutore
 
 Questo punto va capito bene prima della call, perché cambia il modo di parlare.
@@ -165,10 +196,9 @@ Si aprono due finestre. Poi, in ordine:
 diverse. Non sono le stesse liste: servono entrambe, e la lingua dell'app è
 quella che compare in tutti e due i menu.
 
-Su 50 lingue traducibili, **44 hanno anche una voce sintetica** con cui
-l'interlocutore può sentirle. Le altre 6 (esperanto, basco, chirghiso,
-portoghese brasiliano, tagalog, cinese tradizionale) si traducono e basta: si
-leggono, non si pronunciano.
+Su 50 lingue traducibili, **46 hanno anche una voce sintetica** con cui
+l'interlocutore può sentirle. Le altre 4 (esperanto, basco, chirghiso,
+tagalog) si traducono e basta: si leggono, non si pronunciano.
 
 Le lingue si scelgono dal pannello, e si possono cambiare anche a metà
 conversazione. I modelli di traduzione fra italiano e inglese ci sono sempre;
