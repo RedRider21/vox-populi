@@ -147,6 +147,9 @@ cartella unica senza riscaricarli.
 
 ## Uso
 
+Per la spiegazione completa c'è il **[manuale](docs/manuale.md)** (o la sua
+versione web, se il progetto ha il sito attivo). Qui la versione breve.
+
 ### Il giorno della call
 
 ```bash
