@@ -72,6 +72,7 @@ DEFAULTS: dict = {
     "whisper_model": WHISPER_MODEL,
     "font_size": 20,              # carattere del pannello
     "speaker_font_size": 44,      # carattere della finestra per l'interlocutore
+    "speaker_history": SPEAKER_HISTORY,
     "half_duplex": True,          # sospende il mic mentre l'altro parla
     "use_initial_prompt": False,
     "voice_enabled": False,       # interruttore voce sintetica (fase 4)
