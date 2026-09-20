@@ -12,6 +12,8 @@ Exec=vox-populi
 TryExec=vox-populi
 Icon=vox-populi
 Terminal=false
-Categories=AudioVideo;Audio;Utility;GTK;
+# Una sola categoria principale (AudioVideo): con due, il programma
+# comparirebbe due volte nel menu delle applicazioni.
+Categories=AudioVideo;Audio;GTK;
 Keywords=traduzione;translation;traduction;sottotitoli;subtitles;meet;videochiamata;call;voce;voice;
 StartupNotify=true
