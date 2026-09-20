@@ -77,7 +77,9 @@ DEFAULTS: dict = {
     "use_initial_prompt": False,
     "voice_enabled": False,       # interruttore voce sintetica (fase 4)
     "tts_voice": "en-IN-PrabhatNeural",
-    "window": {"x": 40, "y": 40, "w": 620, "h": 460},
+    # L'altezza tiene dentro anche la sezione della voce sintetica: piu' bassa
+    # e i controlli in fondo vengono tagliati.
+    "window": {"x": 40, "y": 40, "w": 640, "h": 580},
     "speaker_window": {"x": 700, "y": 40, "w": 760, "h": 520},
 }
 

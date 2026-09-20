@@ -27,9 +27,11 @@ from gi.repository import GLib, Gtk  # noqa: E402
 from . import audio as A
 from . import config as C
 from . import stt
+from . import tts
 from . import ui
 from .ui import stile
 from .pipeline import Motore
+from .virtualmic import MicrofonoVirtuale, VirtualMicError
 
 
 class Applicazione:
@@ -49,12 +51,18 @@ class Applicazione:
             on_mostra_speaker=self.mostra_speaker,
             on_dispositivi=self._su_dispositivi,
             on_half_duplex=self._su_half_duplex,
+            on_voce=self._su_voce,
+            on_prova_voce=self.prova_voce,
         )
         self.speaker = ui.FinestraSpeaker(self.cfg)
         self.speaker.hide()
 
         self.motore: Motore | None = None
         self._thread_avvio: threading.Thread | None = None
+        # Microfono virtuale e voce sintetica esistono solo a interruttore
+        # acceso: a interruttore spento l'app non tocca l'audio di sistema.
+        self.microfono_virtuale: MicrofonoVirtuale | None = None
+        self.voce: tts.Voce | None = None
 
         self.pannello.connect("destroy", self._su_chiusura)
         if apri_speaker:
@@ -77,6 +85,11 @@ class Applicazione:
         self.pannello.imposta_in_esecuzione(True)
 
         def procedura() -> None:
+            # La voce sintetica si prepara per prima: se fallisce, la
+            # conversazione deve comunque partire coi soli sottotitoli.
+            if bool(self.cfg.get("voice_enabled", False)):
+                self._prepara_voce(sorgente_mic)
+
             motore = Motore(
                 sorgente_remota=sorgente_remota,
                 sorgente_mic=sorgente_mic,
@@ -84,6 +97,7 @@ class Applicazione:
                 on_stato=self._su_stato,
                 half_duplex=bool(self.cfg.get("half_duplex", True)),
                 modello=self.cfg.get("whisper_model", C.WHISPER_MODEL),
+                on_parlato_locale=self._su_parlato_locale,
             )
             try:
                 motore.avvia()
@@ -101,12 +115,57 @@ class Applicazione:
         self._thread_avvio.start()
 
     def ferma(self) -> None:
-        """Arresta la pipeline e riabilita i controlli."""
+        """Arresta la pipeline, smonta la voce e riabilita i controlli."""
         motore, self.motore = self.motore, None
         if motore is not None:
             threading.Thread(target=motore.ferma, daemon=True).start()
+        self._smonta_voce()
         self.pannello.imposta_in_esecuzione(False)
         self.pannello.mostra_stato(_StatoFinto())
+
+    # ------------------------------------------------------- voce sintetica ----
+    def _prepara_voce(self, microfono: str) -> None:
+        """Carica il microfono virtuale e apre la coda della voce. Bloccante."""
+        try:
+            virtuale = MicrofonoVirtuale(microfono)
+            sink = virtuale.attiva()
+        except VirtualMicError as exc:
+            GLib.idle_add(
+                self._mostra_errore,
+                f"Voce non attivata: {exc}. I sottotitoli funzionano lo stesso.",
+            )
+            return
+
+        voce = tts.Voce(
+            sink="vox_populi_mic",
+            voce=str(self.cfg.get("tts_voice", tts.VOCE_PREDEFINITA)),
+            ducka=virtuale.ducka,
+            ducka_a_tempo=virtuale.ducka_a_tempo,
+        )
+        voce.avvia()
+        self.microfono_virtuale = virtuale
+        self.voce = voce
+        GLib.idle_add(self.pannello.mostra_sorgente_virtuale, sink)
+        print(f"[voce] microfono virtuale pronto: scegli '{sink}' come microfono in Meet")
+
+    def _smonta_voce(self) -> None:
+        """Chiude voce e microfono virtuale, ripristinando l'audio di sistema."""
+        voce, self.voce = self.voce, None
+        virtuale, self.microfono_virtuale = self.microfono_virtuale, None
+        if voce is not None:
+            voce.ferma()
+        if virtuale is not None:
+            virtuale.chiudi()
+
+    def prova_voce(self) -> None:
+        """Fa dire una frase alla voce, per sentire come suona. Non blocca."""
+        voce = self.voce
+        if voce is None:
+            self.pannello.mostra_stato(_StatoFinto(
+                "La voce e' attiva solo durante la conversazione: avvia prima."
+            ))
+            return
+        threading.Thread(target=voce.prova, daemon=True).start()
 
     def mostra_speaker(self) -> None:
         """Mostra la finestra da condividere in Meet."""
@@ -121,9 +180,36 @@ class Applicazione:
             # Nella finestra condivisa va solo cio' che dice l'utente,
             # tradotto: e' quello che l'interlocutore deve capire.
             GLib.idle_add(self.speaker.aggiungi, risultato.traduzione)
+            # La voce segue lo stesso percorso del testo: se compare nella
+            # finestra, va anche pronunciata.
+            if self.voce is not None:
+                self.voce.di(risultato.traduzione)
 
     def _su_stato(self, stato) -> None:
         GLib.idle_add(self.pannello.mostra_stato, stato)
+
+    def _su_parlato_locale(self) -> None:
+        """L'utente ha iniziato a parlare: chiude il passaggio della voce reale.
+
+        Arriva dal thread di cattura, che non deve mai aspettare: la chiamata a
+        pactl e' breve ma e' pur sempre un processo, quindi va su un thread suo.
+        Chiudere adesso, e non quando la traduzione e' pronta, e' cio' che
+        impedisce all'interlocutore di sentire l'italiano prima dell'inglese.
+        """
+        virtuale = self.microfono_virtuale
+        if virtuale is None:
+            return
+        threading.Thread(target=virtuale.ducka, args=(True,), daemon=True).start()
+
+    def _su_voce(self, attivo: bool) -> None:
+        """Interruttore della voce dal pannello."""
+        self.cfg["voice_enabled"] = attivo
+        C.save(self.cfg)
+        if not attivo and self.motore is not None:
+            # Spegnere la voce a conversazione avviata deve riaprire subito il
+            # microfono, altrimenti l'interlocutore non sente piu' nulla.
+            threading.Thread(target=self._smonta_voce, daemon=True).start()
+            self.pannello.mostra_sorgente_virtuale(None)
 
     def _mostra_errore(self, messaggio: str) -> None:
         self.pannello.mostra_stato(_StatoFinto(messaggio))

@@ -24,6 +24,7 @@ from gi.repository import GLib, Gtk  # noqa: E402
 
 from .. import audio as A
 from .. import config as C
+from ..tts import VOCE_PREDEFINITA as DEFAULT_VOCE, VOCI as TTS_VOCI
 
 
 class FinestraPannello(Gtk.Window):
@@ -37,6 +38,8 @@ class FinestraPannello(Gtk.Window):
         on_mostra_speaker: Callable[[], None],
         on_dispositivi: Callable[[str, str], None],
         on_half_duplex: Callable[[bool], None],
+        on_voce: Callable[[bool], None] | None = None,
+        on_prova_voce: Callable[[], None] | None = None,
     ) -> None:
         super().__init__(title="Vox Populi")
         self.cfg = cfg
@@ -45,6 +48,8 @@ class FinestraPannello(Gtk.Window):
         self._on_mostra_speaker = on_mostra_speaker
         self._on_dispositivi = on_dispositivi
         self._on_half_duplex = on_half_duplex
+        self._on_voce = on_voce
+        self._on_prova_voce = on_prova_voce
         self._in_esecuzione = False
         # I menu hanno liste diverse (monitor e microfoni): invece di fidarsi
         # dell'indice globale, tengo per ogni combo la propria lista. PyGObject
@@ -189,6 +194,46 @@ class FinestraPannello(Gtk.Window):
         self._check_half.connect("toggled", self._su_half_duplex)
         contenitore.pack_start(self._check_half, False, False, 0)
 
+        riga3 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        self._check_voce = Gtk.CheckButton(
+            label="Voce inglese: l'interlocutore sente la traduzione"
+        )
+        self._check_voce.get_style_context().add_class("dettaglio")
+        self._check_voce.set_active(bool(self.cfg.get("voice_enabled", False)))
+        self._check_voce.set_tooltip_text(
+            "Sostituisce la tua voce con una sintetica in inglese. Mentre parli "
+            "l'interlocutore sente un breve silenzio, poi la frase in inglese."
+        )
+        self._check_voce.connect("toggled", self._su_voce)
+        riga3.pack_start(self._check_voce, False, False, 0)
+
+        self._combo_voce = Gtk.ComboBoxText()
+        self._combo_voce.set_tooltip_text("La voce sintetica da usare")
+        for nome, descrizione in TTS_VOCI.items():
+            self._combo_voce.append(nome, f"{nome} ({descrizione})")
+        voce_salvata = str(self.cfg.get("tts_voice", DEFAULT_VOCE))
+        if not self._combo_voce.set_active_id(voce_salvata):
+            self._combo_voce.set_active_id(DEFAULT_VOCE)
+        self._combo_voce.connect("changed", self._su_cambio_voce)
+        # A voce spenta la scelta non ha senso: la si mostra comunque, perche'
+        # l'utente veda che esiste, ma non la si lascia toccare.
+        self._combo_voce.set_sensitive(self._check_voce.get_active())
+        riga3.pack_start(self._combo_voce, True, True, 0)
+
+        pulsante_prova = Gtk.Button(label="Prova")
+        pulsante_prova.set_tooltip_text("Pronuncia una frase di prova")
+        pulsante_prova.connect("clicked", lambda _b: self._prova_voce())
+        riga3.pack_start(pulsante_prova, False, False, 0)
+        contenitore.pack_start(riga3, False, False, 0)
+
+        # Qui compare il nome del microfono da scegliere in Meet quando la voce
+        # e' attiva: e' l'informazione che serve il giorno della call.
+        self._etichetta_virtuale = Gtk.Label(label="")
+        self._etichetta_virtuale.get_style_context().add_class("dettaglio")
+        self._etichetta_virtuale.set_xalign(0)
+        self._etichetta_virtuale.set_line_wrap(True)
+        contenitore.pack_start(self._etichetta_virtuale, False, False, 0)
+
         return contenitore
 
     # ---------------------------------------------------------------- API ----
@@ -251,6 +296,41 @@ class FinestraPannello(Gtk.Window):
 
     def _su_half_duplex(self, check: Gtk.CheckButton) -> None:
         self._on_half_duplex(check.get_active())
+
+    def _su_voce(self, check: Gtk.CheckButton) -> None:
+        attivo = check.get_active()
+        self._combo_voce.set_sensitive(attivo)
+        if not attivo:
+            self._etichetta_virtuale.set_text("")
+        if self._on_voce is not None:
+            self._on_voce(attivo)
+
+    def _su_cambio_voce(self, combo: Gtk.ComboBoxText) -> None:
+        scelta = combo.get_active_id()
+        if not scelta:
+            return
+        self.cfg["tts_voice"] = scelta
+        C.save(self.cfg)
+        # La voce nuova ha effetto dalla frase successiva: il motore la rilegge
+        # solo quando riparte, quindi vale la pena dirlo invece di far credere
+        # che il cambio sia immediato.
+        if self._in_esecuzione:
+            self._etichetta_virtuale.set_text(
+                "Voce cambiata: avra' effetto al prossimo avvio."
+            )
+
+    def _prova_voce(self) -> None:
+        if self._on_prova_voce is not None:
+            self._on_prova_voce()
+
+    def mostra_sorgente_virtuale(self, nome: str | None) -> None:
+        """Indica il microfono da selezionare in Meet, o lo nasconde."""
+        if nome:
+            self._etichetta_virtuale.set_text(
+                f"In Meet scegli come microfono: {nome}"
+            )
+        else:
+            self._etichetta_virtuale.set_text("")
 
     def _aggiorna_sorgenti(self) -> None:
         """Riempe i menu e preseleziona i dispositivi salvati o predefiniti."""

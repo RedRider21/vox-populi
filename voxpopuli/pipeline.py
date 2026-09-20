@@ -79,6 +79,7 @@ class Motore:
         half_duplex: bool = True,
         modello: str | None = None,
         prompt: str | None = None,
+        on_parlato_locale: Callable[[], None] | None = None,
     ) -> None:
         self.sorgente_remota = sorgente_remota
         self.sorgente_mic = sorgente_mic
@@ -87,6 +88,10 @@ class Motore:
         self.half_duplex = half_duplex
         self.modello = modello or C.WHISPER_MODEL
         self.prompt = prompt
+        # Chiamata quando l'utente comincia a parlare: serve alla voce sintetica
+        # per chiudere subito il passaggio del microfono, invece di aspettare
+        # che la traduzione sia pronta e lasciar passare nel frattempo l'italiano.
+        self.on_parlato_locale = on_parlato_locale
 
         self.stato = Stato(
             sorgente_remota=sorgente_remota, sorgente_mic=sorgente_mic,
@@ -155,6 +160,9 @@ class Motore:
     def _cattura(self, flusso: str, sorgente: str) -> None:
         """Legge una sorgente e mette in coda i segmenti di parlato."""
         vad = VadSegmenter() if flusso == "locale" else self._vad_remoto
+        # Il VAD resta "attivo" per tutta la durata della frase: la callback va
+        # invocata solo sul fronte di salita, non a ogni frame.
+        era_attivo = False
         try:
             with A.CatturaAudio(sorgente) as cattura:
                 while not self._stop.is_set():
@@ -169,8 +177,17 @@ class Motore:
                         break
                     for segmento in vad.feed(pcm16_a_float(dati)):
                         self._accoda(flusso, segmento)
-                    if flusso == "remoto" and vad.attivo:
+                    if vad.attivo and not era_attivo:
+                        if flusso == "remoto":
+                            self._ultimo_parlato_remoto = time.monotonic()
+                        elif self.on_parlato_locale is not None:
+                            try:
+                                self.on_parlato_locale()
+                            except Exception as exc:      # noqa: BLE001 - la cattura non si ferma
+                                print(f"[motore] callback di parlato fallita: {exc}")
+                    elif vad.attivo and flusso == "remoto":
                         self._ultimo_parlato_remoto = time.monotonic()
+                    era_attivo = vad.attivo
         except A.AudioError as exc:
             self._aggiorna(errore=str(exc))
             print(f"[motore] {exc}")

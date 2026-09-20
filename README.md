@@ -35,18 +35,34 @@ senza connessione.
 
 Questo punto va capito bene prima della call, perché cambia il modo di parlare.
 
+Ci sono due modi di usare il programma, e si scelgono dall'interruttore
+**Voce inglese** nel pannello.
+
+**A voce spenta** (predefinito) — Mumbai ti sente parlare in italiano e legge
+l'inglese:
+
 | | Tu senti | Mumbai sente | Mumbai vede |
 |---|---|---|---|
-| Tu parli italiano | la sua voce tradotta in italiano nel pannello | **la tua voce italiana reale** | la traduzione inglese nella finestra condivisa |
-| Lui parla inglese | la sua voce tradotta in italiano nel pannello | la propria voce, normalmente | — |
+| Tu parli italiano | la traduzione nel pannello | **la tua voce italiana reale** | la traduzione inglese |
+| Lui parla inglese | la traduzione nel pannello | la propria voce, normalmente | — |
 
-In altre parole: **la voce non viene sostituita**, viene affiancata dal testo.
-Mumbai ti sente parlare in italiano e legge l'inglese nella finestra. Non è
-doppiaggio: è supporto alla lettura, ed è il motivo per cui vale la pena
-parlare scandendo bene e un po' più lentamente del solito.
+**A voce accesa** — Mumbai sente l'inglese, pronunciato da una voce sintetica
+con accento indiano. È doppiaggio vero, ma con un ritardo:
 
-> La voce sintetica inglese (che sostituirebbe la tua) è prevista come
-> miglioramento successivo e non è ancora attiva in questa versione.
+| | Tu senti | Mumbai sente | Mumbai vede |
+|---|---|---|---|
+| Tu parli italiano | la traduzione nel pannello | **un breve silenzio, poi la frase in inglese** | la traduzione inglese |
+| Lui parla inglese | la traduzione nel pannello | la propria voce, normalmente | — |
+
+Il silenzio dura quanto la traduzione, cioè circa due secondi: mentre parli,
+il tuo microfono viene chiuso, e si riapre quando la voce inglese ha finito.
+Senza questa chiusura l'interlocutore sentirebbe l'italiano *e poi* l'inglese,
+che è peggio di entrambi. Per questo a voce accesa la conversazione diventa
+inevitabilmente più lenta e a turni.
+
+**Consiglio pratico**: la voce serve se l'interlocutore fatica a leggere mentre
+ascolta, o se la call è affollata e i sottotitoli passano in secondo piano.
+Per una conversazione normale, i sottotitoli da soli sono più reattivi.
 
 ## Installazione
 
@@ -80,14 +96,24 @@ Si aprono due finestre. Poi, in ordine:
    - **Microfono** — il tuo microfono.
    La scelta viene ricordata per la volta successiva.
 
-2. **Premi Avvia.** La prima volta carica i modelli: qualche secondo, poi
-   compare `● in ascolto`.
+2. **Se vuoi la voce sintetica**, spunta **Voce inglese** e scegli quale voce
+   (le prime tre hanno accento indiano). Il pulsante **Prova** fa pronunciare
+   una frase di esempio, ma funziona solo a conversazione avviata.
 
-3. **In Meet, condividi la finestra "Vox Populi - leggere qui"** con
+3. **Premi Avvia.** La prima volta carica i modelli: qualche secondo, poi
+   compare `● in ascolto`. A voce accesa compare anche la scritta con il
+   microfono da scegliere in Meet.
+
+4. **In Meet, condividi la finestra "Vox Populi - leggere qui"** con
    *Condividi una finestra* (non tutto lo schermo). È la finestra con il testo
    grande: è quella che l'interlocutore deve vedere.
 
-4. **Parla normalmente.** Le frasi tradotte appaiono nel pannello e, per le
+5. **Solo se hai acceso la voce, cambia il microfono in Meet**: scegli
+   `Monitor of VoxPopuli_Mic`. Va fatto una volta per call: è così che la voce
+   inglese arriva all'interlocutore. Se ti dimentichi questo passaggio, lui
+   continuerà a sentirti in italiano e la voce sintetica resterà muta.
+
+6. **Parla normalmente.** Le frasi tradotte appaiono nel pannello e, per le
    tue, anche nella finestra condivisa.
 
 ### Le cuffie sono meglio delle casse
@@ -144,6 +170,8 @@ vox-populi
 │   ├── vad.py           segmentazione in frasi
 │   ├── stt.py           trascrizione (faster-whisper)
 │   ├── mt.py            traduzione (argostranslate)
+│   ├── tts.py           voce sintetica (edge-tts)
+│   ├── virtualmic.py    microfono virtuale e ducking (pactl)
 │   ├── pipeline.py      code, thread, half-duplex, latenze
 │   ├── cli.py           prove da terminale
 │   └── ui/              pannello, finestra condivisa, foglio di stile
@@ -179,6 +207,21 @@ intero, altrimenti copre tutto.
 **L'avvio è lento.**
 La prima volta carica i modelli (Whisper e argostranslate): qualche secondo in
 più è normale. Dalla seconda è immediato.
+
+**Ho acceso la voce ma l'interlocutore non sente niente.**
+Quasi sempre è il microfono di Meet rimasto su quello vero: va scelto
+`Monitor of VoxPopuli_Mic`. Il nome esatto compare nel pannello quando la voce
+è attiva.
+
+**La voce sintetica non si sente, o arriva a scatti.**
+Serve la connessione a Internet: edge-tts genera la voce online al momento.
+I sottotitoli invece funzionano anche offline.
+
+**Dopo la chiusura il microfono del computer si comporta in modo strano.**
+Non dovrebbe: il microfono virtuale viene smontato all'uscita. Se l'app viene
+uccisa di forza, i moduli possono restare. Si tolgono con
+`pactl list modules short | grep -E 'null-sink|loopback'` per trovare gli
+indici, poi `pactl unload-module <indice>`.
 
 ## Licenza
 
