@@ -31,7 +31,7 @@ from . import tts
 from . import ui
 from .ui import stile
 from .pipeline import Motore
-from .virtualmic import MicrofonoVirtuale, VirtualMicError
+from .virtualmic import ETICHETTA_SINK, MicrofonoVirtuale, VirtualMicError
 
 
 class Applicazione:
@@ -145,8 +145,13 @@ class Applicazione:
         voce.avvia()
         self.microfono_virtuale = virtuale
         self.voce = voce
-        GLib.idle_add(self.pannello.mostra_sorgente_virtuale, sink)
-        print(f"[voce] microfono virtuale pronto: scegli '{sink}' come microfono in Meet")
+        # All'utente serve il nome che legge nel menu di Meet, non quello che
+        # usa pactl: sono diversi, e confonderli il giorno della call costa.
+        GLib.idle_add(
+            self.pannello.mostra_sorgente_virtuale, f"Monitor of {ETICHETTA_SINK}",
+        )
+        print(f"[voce] microfono virtuale pronto ({sink}): "
+              f"in Meet scegli 'Monitor of {ETICHETTA_SINK}'")
 
     def _smonta_voce(self) -> None:
         """Chiude voce e microfono virtuale, ripristinando l'audio di sistema."""
@@ -258,8 +263,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    signal.signal(signal.SIGINT, signal.SIG_DFL)   # Ctrl+C chiude
     applicazione = Applicazione(apri_speaker=args.apri_speaker)
+
+    def _chiudi_per_segnale(_numero, _frame) -> None:
+        """Chiude come se l'utente avesse chiuso la finestra.
+
+        Non basta uscire: la voce sintetica ha caricato moduli di PulseAudio che
+        resterebbero nel sistema, lasciando il microfono del computer in uno
+        stato strano. Distruggere il pannello passa dalla stessa pulizia della
+        chiusura normale.
+        """
+        applicazione.pannello.destroy()
+
+    for segnale in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+        try:
+            signal.signal(segnale, _chiudi_per_segnale)
+        except (ValueError, OSError):
+            pass                      # segnale non disponibile su questa piattaforma
+
     if args.avvia:
         applicazione.avvia()
     Gtk.main()
