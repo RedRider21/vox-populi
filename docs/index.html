@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vox Populi — traduzione simultanea per le videochiamate</title>
+<meta name="description" content="Sottotitoli e voce tradotti in tempo reale per Google Meet e le altre videochiamate. Tutto in locale, nessun servizio esterno, nessuna chiave API. L'interlocutore non deve installare niente.">
+<link rel="stylesheet" href="stile.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="riga">
+    <span class="marchio">Vox Populi</span>
+    <nav>
+      <a href="#come-funziona">Come funziona</a>
+      <a href="#schermate">Schermate</a>
+      <a href="#installazione">Installazione</a>
+      <a href="#lingue">Lingue e voci</a>
+      <a href="manuale.html">Manuale</a>
+      <a href="https://github.com/RedRider21/vox-populi">GitHub</a>
+    </nav>
+    <button id="cambia-tema" type="button">☾ Scuro</button>
+  </div>
+</header>
+
+<div class="eroe">
+  <h1>Capirsi, anche senza parlare la stessa lingua</h1>
+  <p class="sottotitolo">
+    Vox Populi ascolta la tua voce e quella del tuo interlocutore, le trascrive,
+    le traduce e le mostra a schermo mentre la chiamata è in corso. Gira tutto
+    sul tuo computer: nessun servizio esterno, nessuna chiave API, nessun
+    abbonamento.
+  </p>
+  <div class="pulsanti">
+    <a class="pulsante principale" href="#installazione">Installa</a>
+    <a class="pulsante" href="manuale.html">Manuale</a>
+    <a class="pulsante" href="https://github.com/RedRider21/vox-populi">Codice su GitHub</a>
+  </div>
+</div>
+
+<main>
+
+<section>
+  <div class="avviso attenzione">
+    <h3>Prima di scaricare: servono circa 655 MB di modelli</h3>
+    <p>
+      I modelli di trascrizione e traduzione non stanno nel repository: al primo
+      avvio il programma ne scarica <strong>circa 655 MB</strong>. Ogni lingua in
+      più rispetto alla coppia italiano/inglese ne costa altri 190 circa.
+    </p>
+    <p>
+      <strong>Non parte mai un download da solo.</strong> <code>install.sh</code>
+      dichiara quanto scaricherà e chiede conferma; dall'applicazione i modelli si
+      scaricano solo premendo <em>Installa modelli</em>. Tutto finisce in
+      <code>~/.local/share/vox-populi/</code>, una cartella sola che puoi
+      cancellare quando vuoi.
+    </p>
+  </div>
+
+  <div class="griglia due">
+    <div class="scheda">
+      <h3>L'interlocutore non installa niente</h3>
+      <p>
+        Nessuna estensione, nessun account, nessun programma da avviare. Usa la
+        sua solita applicazione di videoconferenza e vede una finestra condivisa,
+        come se fosse una presentazione. Tutto il lavoro avviene sul tuo PC.
+      </p>
+    </div>
+    <div class="scheda">
+      <h3>Funziona anche senza connessione</h3>
+      <p>
+        I modelli girano sul tuo processore. Durante la conversazione non viene
+        inviato niente a Internet; dopo il primo avvio il programma funziona
+        anche staccato dalla rete.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="come-funziona">
+  <h2>Come funziona</h2>
+  <p>
+    Due flussi audio vengono ascoltati insieme: la voce dell'interlocutore, che
+    arriva dal monitor delle casse o delle cuffie, e la tua, che arriva dal
+    microfono. Entrambi passano per la trascrizione e la traduzione, e finiscono
+    in due finestre diverse.
+  </p>
+<pre><code>   la voce dell'altro ──► monitor casse/cuffie ──┐
+                                                 ├──► VAD ──► Whisper ──► traduzione ──┐
+   la tua voce ──► microfono ────────────────────┘   (segmenta) (trascrive) (traduce)  │
+                                                                                      ▼
+   ┌─ Pannello (solo per te) ──┐   ┌─ Finestra per lui (la condividi) ─┐
+   │  LORO · la sua → la tua   │   │                                   │
+   │  TU   · la tua → la sua   │   │   testo grande, ultime frasi      │
+   └───────────────────────────┘   └───────────────────────────────────┘</code></pre>
+  <p>
+    La segmentazione in frasi avviene con un rilevatore di attività vocale: il
+    programma aspetta che tu finisca di parlare (circa mezzo secondo di
+    silenzio), poi trascrive e traduce. Non si interrompe a metà parola.
+  </p>
+</section>
+
+<section id="schermate">
+  <h2>Come si presenta</h2>
+
+  <figure>
+    <img src="img/pannello.png" alt="Il pannello con la conversazione in corso: in alto la traduzione di quello che dice l'interlocutore, in basso la propria">
+    <figcaption>
+      Il <strong>pannello</strong>, che resta sopra la call e vedi solo tu. In alto
+      quello che dice l'altro, in basso quello che dici tu: l'originale in piccolo,
+      la traduzione in grande.
+    </figcaption>
+  </figure>
+
+  <figure>
+    <img src="img/speaker.png" alt="La finestra condivisa con le frasi tradotte in testo molto grande">
+    <figcaption>
+      La <strong>finestra per lui</strong>, quella che condividi nella call. Testo
+      molto grande, alto contrasto, le ultime frasi che scorrono.
+    </figcaption>
+  </figure>
+
+  <h3>Sei schemi di colore</h3>
+  <p>
+    Si scelgono dal pannello e si applicano subito, anche alle finestre già
+    aperte e a quella che stai condividendo. Servono a leggere meglio: c'è chi
+    lavora al buio, chi in pieno sole, e chi ha bisogno del massimo contrasto.
+  </p>
+  <div class="temi">
+    <figure>
+      <img src="img/tema-chiaro.png" alt="Tema chiaro">
+      <figcaption>Chiaro</figcaption>
+    </figure>
+    <figure>
+      <img src="img/tema-ambra.png" alt="Tema ambra, colori da terminale">
+      <figcaption>Ambra (terminale)</figcaption>
+    </figure>
+    <figure>
+      <img src="img/tema-verde.png" alt="Tema verde fosforo">
+      <figcaption>Verde fosforo</figcaption>
+    </figure>
+    <figure>
+      <img src="img/tema-notte.png" alt="Tema notte, viola">
+      <figcaption>Notte (viola)</figcaption>
+    </figure>
+    <figure>
+      <img src="img/tema-contrasto.png" alt="Tema ad alto contrasto, bianco su nero">
+      <figcaption>Alto contrasto</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <h2>Cosa sente e cosa vede l'interlocutore</h2>
+  <p>
+    Questo punto va capito prima di iniziare, perché cambia il modo di parlare.
+    Le due modalità si scelgono da una casella nel pannello.
+  </p>
+
+  <h3>A voce spenta (consigliato per iniziare)</h3>
+  <p>Lui ti sente parlare nella tua lingua e legge la traduzione.</p>
+  <table>
+    <tr><th></th><th>Tu senti</th><th>Lui sente</th><th>Lui vede</th></tr>
+    <tr><td>Tu parli</td><td>la traduzione nel pannello</td><td><strong>la tua voce vera</strong></td><td>la traduzione, nella finestra condivisa</td></tr>
+    <tr><td>Lui parla</td><td>la traduzione nel pannello</td><td>la propria voce, normalmente</td><td>—</td></tr>
+  </table>
+
+  <h3>A voce accesa</h3>
+  <p>
+    Lui sente la traduzione pronunciata da una voce sintetica, nella sua lingua.
+    È doppiaggio vero, ma a turni: mentre parli non sente niente, appena finisci
+    la frase sente la traduzione.
+  </p>
+  <table>
+    <tr><th></th><th>Tu senti</th><th>Lui sente</th></tr>
+    <tr><td>Tu parli</td><td>la traduzione nel pannello</td><td>un breve silenzio, <strong>poi la frase tradotta</strong></td></tr>
+    <tr><td>Lui parla</td><td>la traduzione nel pannello</td><td>la propria voce, normalmente</td></tr>
+  </table>
+  <p>
+    A voce accesa la conversazione diventa inevitabilmente più lenta. La voce
+    serve soprattutto a chi fatica a leggere mentre ascolta.
+  </p>
+</section>
+
+<section id="installazione">
+  <h2>Installazione</h2>
+  <p>Su Debian, Ubuntu e affini:</p>
+<pre><code>git clone https://github.com/RedRider21/vox-populi
+cd vox-populi
+./install.sh</code></pre>
+  <p>
+    Lo script dice quanto occupa e chiede conferma, poi installa i pacchetti di
+    sistema mancanti, le dipendenze Python e i modelli, e infine esegue una
+    diagnosi. È idempotente: rilanciarlo non fa danni e non riscarica ciò che
+    c'è già. Per saltare la domanda: <code>./install.sh --si</code>.
+  </p>
+
+  <h3>Cosa viene scaricato</h3>
+  <table>
+    <tr><th>Cosa</th><th>Dove</th><th>Spazio</th></tr>
+    <tr><td>Trascrizione — Whisper <code>small</code></td><td><code>~/.local/share/vox-populi/whisper/</code></td><td>~465 MB</td></tr>
+    <tr><td>Traduzione italiano ↔ inglese</td><td><code>~/.local/share/vox-populi/modelli/</code></td><td>~190 MB</td></tr>
+    <tr><td><strong>Totale al primo avvio</strong></td><td></td><td><strong>~655 MB</strong></td></tr>
+  </table>
+  <p>
+    Tutto sta in una cartella sola: preferenze, elenco delle voci, modelli di
+    traduzione e modello di trascrizione. Si copia su un'altra macchina e il
+    programma è già configurato; si cancella e non resta niente. Per
+    disinstallare basta <code>rm -rf ~/.local/share/vox-populi</code>.
+  </p>
+
+  <h3>Requisiti</h3>
+  <ul>
+    <li>Linux con PulseAudio o PipeWire</li>
+    <li>Sessione X11 — su Wayland la finestra sempre-in-alto può non funzionare</li>
+    <li>Python 3.10 o superiore, PyGObject e GTK 3</li>
+    <li>Una CPU decente: la trascrizione gira su processore, senza GPU</li>
+  </ul>
+</section>
+
+<section id="lingue">
+  <h2>Lingue e voci</h2>
+  <div class="griglia due">
+    <div class="scheda">
+      <div class="numero">50</div>
+      <div class="etichetta">lingue traducibili, con la lingua ponte quando serve</div>
+    </div>
+    <div class="scheda">
+      <div class="numero">322</div>
+      <div class="etichetta">voci sintetiche in 75 lingue, 46 delle quali usabili con la traduzione</div>
+    </div>
+  </div>
+  <p>
+    La coppia di lingue si sceglie dal pannello e si può cambiare anche a
+    conversazione avviata. Dove manca la coppia diretta il programma passa
+    dall'inglese come lingua intermedia: funziona, ma allunga leggermente la
+    traduzione e la diagnosi lo segnala.
+  </p>
+  <p>
+    Le voci non sono un elenco scritto nel programma: vengono chieste al
+    servizio di Microsoft e messe in cache per trenta giorni, così restano
+    aggiornate da sole. Ognuna porta genere e nazionalità — <em>Prabhat ·
+    maschile · India</em> — utile per far parlare l'interlocutore con la voce del
+    suo paese invece che con un accento a caso. Se la rete manca, il programma
+    usa sei voci di riserva e continua a funzionare.
+  </p>
+</section>
+
+<section>
+  <h2>Latenza</h2>
+  <p>Misurata su un i5-1235U, a modelli già caricati:</p>
+  <table>
+    <tr><th>Stadio</th><th>Tempo</th></tr>
+    <tr><td>Attesa di fine frase</td><td>~0,6 s</td></tr>
+    <tr><td>Trascrizione</td><td>~1,75 s</td></tr>
+    <tr><td>Traduzione</td><td>~0,06 s</td></tr>
+    <tr><td><strong>Totale percepito</strong></td><td><strong>~2,4 s</strong></td></tr>
+  </table>
+  <p>
+    In pratica: leggi la traduzione della frase precedente mentre l'altro sta già
+    dicendo la successiva. Conviene rassegnarsi a questo ritmo invece di
+    aspettare il testo prima di rispondere, altrimenti la conversazione si
+    impunta.
+  </p>
+</section>
+
+<section>
+  <h2>Licenza</h2>
+  <p>
+    Vox Populi è software libero sotto <strong>GNU AGPL v3.0 o successiva</strong>.
+    Per usi che non possono rispettarne gli obblighi di copyleft — integrazione in
+    prodotti chiusi, erogazione come servizio senza pubblicare il sorgente — è
+    disponibile una licenza commerciale separata.
+  </p>
+  <p>
+    Chi vuole contribuire trova le condizioni nel
+    <a href="https://github.com/RedRider21/vox-populi/blob/master/CLA.md">CLA</a>.
+  </p>
+</section>
+
+</main>
+
+<footer>
+  <div class="riga">
+    <span>Vox Populi — Daniele Deplano (RedRider21)</span>
+    <a href="https://github.com/RedRider21/vox-populi">GitHub</a>
+    <a href="manuale.html">Manuale</a>
+    <a href="guida-call.html">Guida per il giorno della call</a>
+    <a href="https://github.com/RedRider21/vox-populi/blob/master/COMMERCIAL.md">Licenza commerciale</a>
+  </div>
+</footer>
+
+<button id="torna-su" type="button" aria-label="Torna su">↑</button>
+
+<script src="sito.js"></script>
+</body>
+</html>

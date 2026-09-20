@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guida per il giorno della call — Vox Populi</title>
+<meta name="description" content="Promemoria operativo per il giorno della videochiamata con Vox Populi: cosa provare mezz'ora prima, come parlare, cosa dire all'inizio, cosa fare se qualcosa si rompe.">
+<link rel="stylesheet" href="stile.css">
+<style>
+  /* Le caselle di spunta sono promemoria da leggere, non da premere: qui
+     restano quadratini vuoti, come su carta. */
+  .lista-spunta { list-style: none; padding-left: 0; }
+  .lista-spunta li { padding-left: 26px; position: relative; margin-bottom: 7px; }
+  .lista-spunta li::before {
+    content: ""; position: absolute; left: 0; top: 6px;
+    width: 13px; height: 13px; border: 1.5px solid var(--testo-tenue);
+    border-radius: 3px;
+  }
+  blockquote {
+    margin: 0 0 16px; padding: 14px 20px;
+    background: var(--fondo-2); border: 1px solid var(--bordo);
+    border-left: 3px solid var(--accent); border-radius: var(--raggio);
+  }
+  blockquote p:last-child { margin-bottom: 0; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="riga">
+    <span class="marchio"><a href="index.html" style="color:inherit">Vox Populi</a></span>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="manuale.html">Manuale</a>
+      <a href="#prima">Mezz'ora prima</a>
+      <a href="#postura">Come parlare</a>
+      <a href="#guasti">Se si rompe</a>
+      <a href="https://github.com/RedRider21/vox-populi">GitHub</a>
+    </nav>
+    <button id="cambia-tema" type="button">☾ Scuro</button>
+  </div>
+</header>
+
+<div class="eroe">
+  <h1>Guida per il giorno della call</h1>
+  <p class="sottotitolo">
+    Promemoria operativo. Da tenere aperto sul secondo schermo, o stampato.
+    Per capire come funziona il programma c'è il <a href="manuale.html">manuale</a>.
+  </p>
+</div>
+
+<main>
+
+<section id="prima">
+  <h2>Mezz'ora prima</h2>
+
+  <h3>1. Prova tutto una volta, con calma</h3>
+  <p>
+    Apri un video nella lingua dell'interlocutore (va bene qualsiasi cosa con
+    parlato continuo) e avvia Vox Populi come faresti per la call. Serve a
+    verificare che la catena funzioni <em>prima</em> di avere una persona
+    dall'altra parte.
+  </p>
+  <ul class="lista-spunta">
+    <li>Le due finestre si aprono</li>
+    <li>Nel pannello, il menu <strong>Ascolta</strong> punta al monitor giusto (cuffie o casse, secondo cosa userai)</li>
+    <li>Nel pannello, il menu <strong>Microfono</strong> punta al tuo microfono</li>
+    <li>Le lingue in <strong>Parlo</strong> e <strong>Lui parla</strong> sono quelle giuste, e non compare <strong>Installa modelli</strong> da premere</li>
+    <li>Premendo <strong>Avvia</strong> compare <code>● in ascolto</code></li>
+    <li>Parlando tu, appare la traduzione nel riquadro <strong>TU</strong></li>
+    <li>Il video fa comparire la traduzione nel riquadro <strong>LORO</strong></li>
+  </ul>
+  <p>
+    Se il riquadro LORO resta vuoto, cambia voce nel menu <strong>Ascolta</strong>
+    finché non appare il testo: è quasi sempre quello.
+  </p>
+
+  <h3>2. Prova la condivisione</h3>
+  <p>
+    Fai una call di prova da solo (o con chiunque), condividi la finestra
+    <strong>"Vox Populi - leggere qui"</strong> e verifica di vederla bene. Impara
+    il percorso dei menu adesso, non durante la call.
+  </p>
+
+  <h3>3. Decidi sulla voce sintetica</h3>
+  <ul class="lista-spunta">
+    <li>Se la usi, spunta <strong>Voce</strong> e scegli quale, prima di avviare</li>
+    <li>Avvia, poi nella call scegli come microfono <code>Monitor of VoxPopuli_Mic</code></li>
+    <li>Premi <strong>Prova</strong> e verifica che la voce si senta</li>
+    <li>Se non ti serve, lascia la casella spenta: i sottotitoli sono più reattivi</li>
+  </ul>
+  <p>
+    Se usi la voce, serve Internet: le voci arrivano da un servizio online. I
+    sottotitoli invece funzionano anche senza connessione.
+  </p>
+
+  <h3>4. Metti le cuffie</h3>
+  <p>
+    Risolvono l'eco alla radice. Se non le hai, va bene lo stesso: lascia attiva
+    la casella <em>Non trascrivere il microfono mentre l'altro parla</em>.
+  </p>
+</section>
+
+<section id="postura">
+  <h2>La postura giusta</h2>
+
+  <p>
+    <strong>Parla in frasi brevi e complete.</strong> Il traduttore lavora bene su
+    periodi con un senso compiuto; si perde sulle subordinate lunghe e sui
+    discorsi che cambiano direzione a metà. Una frase, un'idea.
+  </p>
+  <p>
+    <strong>Aspetta il tuo turno.</strong> Non parlare sopra l'interlocutore: il
+    sistema trascrive una voce alla volta, e con il microfono sospeso mentre lui
+    parla finiresti per non essere tradotto affatto.
+  </p>
+  <p>
+    <strong>Accetta il ritardo.</strong> Circa due secondi e mezzo fra la fine di
+    una frase e la sua traduzione. Nella pratica leggerai la traduzione della
+    frase precedente mentre lui sta già dicendo la successiva. È normale, non è un
+    guasto: non aspettare di vedere il testo per rispondere, o la conversazione si
+    inceppa.
+  </p>
+  <p>
+    <strong>A voce accesa, i turni sono obbligatori.</strong> Lui ti sente solo
+    dopo che la voce sintetica ha parlato, quindi il silenzio che precede la
+    traduzione è normale e non significa che il microfono sia rotto. Non riempirlo
+    parlando: se ricominci a parlare mentre la voce sta ancora parlando, la frase
+    dopo si accavalla.
+  </p>
+  <p>
+    <strong>Fatti vedere mentre parli.</strong> La finestra condivisa mostra il
+    testo: se la guardi tu invece di farla guardare a lui, non serve a niente.
+    Tieni il pannello personale sul tuo schermo e lascia la finestra grande a
+    disposizione della call.
+  </p>
+</section>
+
+<section id="inizio">
+  <h2>Cosa dire all'inizio</h2>
+  <p>
+    Vale la pena spendere trenta secondi per spiegare la situazione. Nella lingua
+    dell'interlocutore, o facendolo tradurre dal pannello:
+  </p>
+  <blockquote>
+    <p>
+      "I don't speak English well. I'm using a translation tool: you will see the
+      English text of what I say in the shared window. Please speak slowly and in
+      short sentences. Thank you."
+    </p>
+  </blockquote>
+  <p>
+    Messo in chiaro all'inizio, il ritmo più lento non sembra un problema tecnico
+    ma una scelta condivisa.
+  </p>
+</section>
+
+<section id="guasti">
+  <h2>Se qualcosa si rompe durante la call</h2>
+
+  <h3>Il pannello si è fermato</h3>
+  <p>
+    Premi <strong>Avvia</strong> di nuovo. Il carico dei modelli è la parte lenta,
+    ma il programma si riprende senza riavviare la call.
+  </p>
+
+  <h3>Le traduzioni sono diventate assurde</h3>
+  <p>
+    Succede se il microfono capta rumore continuo o se due voci si sovrappongono.
+    Fai una pausa di qualche secondo e riprendi: il rilevatore di voce si
+    ricalibra da solo sul rumore di fondo.
+  </p>
+
+  <h3>Il programma si è chiuso del tutto</h3>
+  <p>
+    Riaprilo con <code>./vox-populi</code>, ricondividi la finestra nella call. La
+    call non si interrompe: perdi solo qualche secondo.
+  </p>
+
+  <h3>Non capisci proprio una frase</h3>
+  <p>
+    Chiedi di ripetere: <em>"Sorry, could you repeat that more slowly?"</em> — con
+    la traduzione a schermo, la ripetizione arriva quasi sempre comprensibile.
+  </p>
+
+  <h3>A voce accesa, l'interlocutore non sente più nulla</h3>
+  <p>
+    Se hai spento la casella <strong>Voce</strong> durante la call, il microfono
+    torna quello vero; verifica che la call lo segua. Al contrario, se la voce è
+    accesa ma lui non sente nulla, il microfono della call è rimasto su quello
+    fisico: va messo su <code>Monitor of VoxPopuli_Mic</code>.
+  </p>
+
+  <h3>La voce sintetica tace</h3>
+  <p>
+    Serve Internet. Se la connessione è caduta, i sottotitoli continuano a
+    funzionare ma la voce no: spegni la casella e prosegui a testo.
+  </p>
+</section>
+
+<section id="dopo">
+  <h2>Dopo la call</h2>
+  <ul class="lista-spunta">
+    <li>Chiudi Vox Populi (Ctrl+C nel terminale, o chiudi il pannello)</li>
+    <li>Se hai usato la voce sintetica, nella call rimetti il microfono normale</li>
+    <li>Il microfono virtuale viene smontato all'uscita: se hai dei dubbi, controlla con <code>pactl list modules short | grep -E 'null-sink|loopback'</code></li>
+  </ul>
+  <p>
+    Le preferenze — dispositivi, lingue, tema, posizione delle finestre — restano
+    salvate per la prossima volta.
+  </p>
+</section>
+
+<section id="riepilogo">
+  <h2>Riepilogo in quattro righe</h2>
+  <ol>
+    <li><code>./vox-populi</code>, controlla lingue e dispositivi, premi <strong>Avvia</strong></li>
+    <li>Nella call condividi la finestra <strong>"Vox Populi - leggere qui"</strong></li>
+    <li>Se usi la voce: spunta <strong>Voce</strong> e scegli <code>Monitor of VoxPopuli_Mic</code> come microfono</li>
+    <li>Parla in frasi brevi, aspetta il tuo turno, accetta i due secondi di ritardo</li>
+  </ol>
+</section>
+
+</main>
+
+<footer>
+  <div class="riga">
+    <span>Vox Populi — Daniele Deplano (RedRider21)</span>
+    <a href="index.html">Home</a>
+    <a href="manuale.html">Manuale</a>
+    <a href="https://github.com/RedRider21/vox-populi">GitHub</a>
+  </div>
+</footer>
+
+<button id="torna-su" type="button" aria-label="Torna su">↑</button>
+
+<script src="sito.js"></script>
+</body>
+</html>

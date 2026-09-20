@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manuale — Vox Populi</title>
+<meta name="description" content="Manuale d'uso di Vox Populi: installazione, controlli del pannello, lingue, voci, microfono virtuale, temi, latenza, problemi frequenti.">
+<link rel="stylesheet" href="stile.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="riga">
+    <span class="marchio"><a href="index.html" style="color:inherit">Vox Populi</a></span>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="#installazione">Installazione</a>
+      <a href="#lingue">Lingue</a>
+      <a href="#voci">Voci</a>
+      <a href="#problemi">Problemi</a>
+      <a href="https://github.com/RedRider21/vox-populi">GitHub</a>
+    </nav>
+    <button id="cambia-tema" type="button">☾ Scuro</button>
+  </div>
+</header>
+
+<div class="eroe">
+  <h1>Manuale</h1>
+  <p class="sottotitolo">
+    Tutto quello che serve per installare, usare e, se qualcosa non va, capire
+    perché. Per il giorno della call c'è un promemoria a parte, più asciutto:
+    <a href="guida-call.html">guida per il giorno della call</a>.
+  </p>
+</div>
+
+<main>
+
+<section id="cos-e">
+  <h2>1. Che cos'è</h2>
+  <p>
+    Vox Populi traduce una conversazione a due, in tempo reale, restando sul tuo
+    computer. Ascolta due flussi audio — la voce dell'interlocutore, che arriva
+    dalle casse o dalle cuffie, e la tua, che arriva dal microfono — li trascrive,
+    li traduce e li mostra a schermo in due finestre: una per te, una da
+    condividere.
+  </p>
+  <p>
+    <strong>L'interlocutore non installa niente.</strong> Nessuna estensione,
+    nessun account, nessun programma da avviare. Lui usa la sua solita
+    applicazione di videoconferenza e vede una finestra condivisa, come se fosse
+    una presentazione.
+  </p>
+  <p>
+    Non viene inviato niente a Internet mentre conversi: i modelli girano sul tuo
+    processore. Dopo il primo avvio funziona anche senza connessione.
+  </p>
+
+  <h3>Cosa sente e cosa vede l'altro</h3>
+  <p>
+    Questo è il punto da capire prima di iniziare, perché cambia il modo di
+    parlare. Le due modalità si scelgono dalla casella <strong>Voce</strong> nel
+    pannello.
+  </p>
+  <p><strong>A voce spenta</strong> (consigliato per iniziare) — lui ti sente parlare nella tua lingua e legge la traduzione:</p>
+  <table>
+    <tr><th></th><th>Tu senti</th><th>Lui sente</th><th>Lui vede</th></tr>
+    <tr><td>Tu parli</td><td>la traduzione nel pannello</td><td><strong>la tua voce vera</strong></td><td>la traduzione, nella finestra condivisa</td></tr>
+    <tr><td>Lui parla</td><td>la traduzione nel pannello</td><td>la propria voce, normalmente</td><td>—</td></tr>
+  </table>
+  <p>
+    Si parla a turni: lui aspetta che tu finisca di leggere. È una conversazione
+    più lenta, ma non serve nessun cambio di configurazione a metà strada.
+  </p>
+  <p><strong>A voce accesa</strong> — lui sente la traduzione pronunciata da una voce sintetica, nella sua lingua:</p>
+  <table>
+    <tr><th></th><th>Tu senti</th><th>Lui sente</th></tr>
+    <tr><td>Tu parli</td><td>la traduzione nel pannello</td><td>un breve silenzio, <strong>poi la frase tradotta</strong></td></tr>
+    <tr><td>Lui parla</td><td>la traduzione nel pannello</td><td>la propria voce, normalmente</td></tr>
+  </table>
+  <p>
+    Il ritardo è la parte da accettare: mentre parli, lui non sente niente; appena
+    finisci la frase, sente la traduzione. Non è simultanea, è a turni. Per questo
+    la voce serve soprattutto a chi fatica a leggere mentre ascolta.
+  </p>
+</section>
+
+<section id="installazione">
+  <h2>2. Installazione</h2>
+
+  <div class="avviso attenzione">
+    <h3>Prima di scaricare: quanto occupa</h3>
+    <p>
+      Al primo avvio servono <strong>circa 655 MB</strong> di modelli. Ogni lingua
+      in più costa circa <strong>190 MB per direzione</strong> e si scarica
+      dall'applicazione, non da qui. La coppia italiano/inglese è inclusa.
+    </p>
+    <p>
+      <strong>Non parte mai un download da solo</strong>: <code>install.sh</code>
+      dichiara quanto scaricherà e chiede conferma; dall'app i modelli si
+      scaricano solo premendo <em>Installa modelli</em>.
+    </p>
+  </div>
+
+  <table>
+    <tr><th>Cosa</th><th>Dove</th><th>Spazio</th></tr>
+    <tr><td>Trascrizione (Whisper <code>small</code>)</td><td><code>~/.local/share/vox-populi/whisper/</code></td><td>~465 MB</td></tr>
+    <tr><td>Traduzione italiano ↔ inglese</td><td><code>~/.local/share/vox-populi/modelli/</code></td><td>~190 MB</td></tr>
+  </table>
+
+  <h3>Procedura</h3>
+  <p>Su Debian, Ubuntu e affini:</p>
+<pre><code>git clone https://github.com/RedRider21/vox-populi
+cd vox-populi
+./install.sh</code></pre>
+  <p>Lo script:</p>
+  <ol>
+    <li>dice quanto occupa e chiede conferma (per saltare la domanda: <code>./install.sh --si</code>);</li>
+    <li>installa i pacchetti di sistema mancanti (<code>python3-gi</code>, <code>pulseaudio-utils</code>, <code>ffmpeg</code>);</li>
+    <li>installa le dipendenze Python;</li>
+    <li>raccoglie in un'unica cartella i dati di eventuali versioni precedenti;</li>
+    <li>scarica i modelli mancanti;</li>
+    <li>esegue una diagnosi e dice se è tutto a posto.</li>
+  </ol>
+  <p>È idempotente: rilanciarlo non fa danni e non riscarica ciò che c'è già.</p>
+
+  <h3>Dove finisce tutto</h3>
+  <p>In <strong>una cartella sola</strong>, <code>~/.local/share/vox-populi/</code>:</p>
+<pre><code>~/.local/share/vox-populi/
+├── config.json     preferenze (dispositivi, lingue, tema, posizione finestre)
+├── voci.json       elenco delle voci sintetiche, aggiornato da solo
+├── modelli/        pacchetti di traduzione
+└── whisper/        modello di trascrizione</code></pre>
+  <p>
+    Si copia su un'altra macchina e il programma è già configurato; si cancella e
+    non resta niente. Il percorso si può spostare con la variabile d'ambiente
+    <code>VOXPOPULI_DATA_DIR</code>.
+  </p>
+
+  <h3>Disinstallare</h3>
+<pre><code>rm -rf ~/.local/share/vox-populi      # modelli e preferenze</code></pre>
+  <p>
+    Il programma in sé è la cartella del progetto: cancellala e basta. Non viene
+    installato nulla nel sistema, a parte le librerie Python e i pacchetti di
+    sistema elencati sopra.
+  </p>
+</section>
+
+<section id="avvio">
+  <h2>3. Avvio e primo uso</h2>
+<pre><code>./vox-populi</code></pre>
+  <p>Si aprono due finestre:</p>
+  <ul>
+    <li><strong>Vox Populi</strong> — il pannello, quello che vedi tu. Resta sopra le altre finestre.</li>
+    <li><strong>Vox Populi - leggere qui</strong> — la finestra grande, quella che condividi.</li>
+  </ul>
+
+  <h3>I controlli del pannello</h3>
+  <table>
+    <tr><th>Controllo</th><th>A cosa serve</th></tr>
+    <tr><td><strong>Parlo</strong></td><td>la lingua in cui parli tu</td></tr>
+    <tr><td><strong>Lui parla</strong></td><td>la lingua del tuo interlocutore</td></tr>
+    <tr><td><strong>Installa modelli</strong></td><td>scarica la coppia scelta, dicendo prima quanto occupa</td></tr>
+    <tr><td><strong>Ascolta</strong></td><td>da dove arriva la voce dell'interlocutore (casse o cuffie)</td></tr>
+    <tr><td><strong>Microfono</strong></td><td>il tuo microfono</td></tr>
+    <tr><td><strong>Non trascrivere il microfono mentre l'altro parla</strong></td><td>evita l'eco con le casse</td></tr>
+    <tr><td><strong>Voce</strong></td><td>attiva la voce sintetica e scegli quale</td></tr>
+    <tr><td><strong>Colori</strong></td><td>lo schema di colore delle due finestre</td></tr>
+    <tr><td><strong>Avvia</strong> / <strong>Ferma</strong></td><td>avvia e ferma la conversazione</td></tr>
+    <tr><td><strong>Finestra per lui</strong></td><td>riporta in primo piano la finestra da condividere</td></tr>
+  </table>
+  <p>
+    Le scelte vengono ricordate per la volta successiva, compresa la posizione
+    delle finestre e il tema.
+  </p>
+
+  <h3>Ordine di avvio</h3>
+  <ol>
+    <li>Scegli <strong>Parlo</strong> e <strong>Lui parla</strong>. Se compare <strong>Installa modelli</strong>, premilo e aspetta: fallo prima della call, non durante.</li>
+    <li>Scegli <strong>Ascolta</strong>: il <em>monitor</em> dell'uscita che stai usando. Con le cuffie, il monitor delle cuffie; con le casse, il monitor delle casse.</li>
+    <li>Scegli il <strong>Microfono</strong>.</li>
+    <li><strong>Premi Avvia.</strong> La prima volta carica i modelli (qualche secondo), poi compare <code>● in ascolto</code>.</li>
+    <li>Nella call, condividi la finestra <strong>"Vox Populi - leggere qui"</strong> con <em>Condividi una finestra</em> — non tutto lo schermo.</li>
+    <li>Parla normalmente.</li>
+  </ol>
+
+  <h3>Il monitor giusto</h3>
+  <p>
+    Il menu <strong>Ascolta</strong> elenca sia microfoni sia monitor. I monitor
+    sono le sorgenti che catturano <em>quello che esce</em> dagli altoparlanti: si
+    riconoscono perché il nome contiene <code>.monitor</code> e la descrizione
+    finisce con <em>"sente l'interlocutore"</em>. È da lì che arriva la voce di chi
+    parla dall'altra parte.
+  </p>
+  <p>
+    Se scegli un microfono al posto del monitor, non sentirai mai l'altro. Se nel
+    riquadro <strong>LORO</strong> non compare niente, il menu <strong>Ascolta</strong>
+    è la prima cosa da controllare: prova le altre voci finché non appare il testo.
+  </p>
+</section>
+
+<section id="lingue">
+  <h2>4. Lingue</h2>
+  <p>
+    <strong>50 lingue</strong> per la traduzione. Si scelgono dal pannello e si
+    possono cambiare anche a conversazione avviata.
+  </p>
+  <p>
+    La coppia più usata, italiano ↔ inglese, ha modelli diretti. Per tutte le
+    altre coppie il programma passa dall'inglese come <strong>lingua ponte</strong>:
+  </p>
+<pre><code>italiano  →  inglese  →  tedesco</code></pre>
+  <p>
+    Funziona, ma allunga leggermente la traduzione e può aggiungere qualche
+    imprecisione, perché il testo passa per una lingua intermedia. La diagnosi
+    (<code>python3 -m voxpopuli.cli diagnosi</code>) dice quando una coppia passa
+    dal ponte.
+  </p>
+  <p>Le lingue disponibili sono: albanese, arabo, azero, basco, bengalese, bulgaro,
+  catalano, ceco, chirghiso, cinese (semplificato), cinese (tradizionale),
+  coreano, danese, ebraico, esperanto, estone, finlandese, francese, galiziano,
+  giapponese, greco, hindi, indonesiano, inglese, irlandese, italiano, lettone,
+  lituano, malese, norvegese, olandese, persiano, polacco, portoghese,
+  portoghese (Brasile), rumeno, russo, slovacco, sloveno, spagnolo, svedese,
+  swahili, tagalog, tedesco, thai, turco, ucraino, ungherese, urdu, vietnamita.</p>
+
+  <h3>Scaricare una lingua nuova</h3>
+  <p>
+    Premi <strong>Installa modelli</strong> dopo aver scelto la coppia. Il
+    programma dice quali pacchetti servono e quanto occupano, poi li scarica
+    mostrando l'avanzamento.
+  </p>
+  <p>
+    Per l'italiano serve quasi sempre passare dall'inglese, quindi una lingua
+    nuova possono essere due pacchetti (~190 MB), non uno.
+  </p>
+</section>
+
+<section id="voci">
+  <h2>5. Voci</h2>
+  <p>
+    <strong>322 voci in 75 lingue</strong>. Non sono un elenco scritto nel
+    programma: vengono chieste al servizio di Microsoft e messe in cache per 30
+    giorni, così restano aggiornate. Se la rete non è disponibile, il programma
+    usa sei voci di riserva e continua a funzionare.
+  </p>
+  <p>
+    Ogni voce è descritta con genere e nazionalità — <em>Prabhat · maschile ·
+    India</em> — utile per far parlare l'interlocutore con la voce del suo paese
+    invece che con un accento a caso. L'elenco del menu <strong>Voce</strong>
+    cambia in base alla lingua scelta in <strong>Lui parla</strong>.
+  </p>
+  <p>
+    Su 50 lingue traducibili, <strong>46 hanno anche una voce</strong>. Le altre
+    quattro — esperanto, basco, chirghiso, tagalog — si traducono e si leggono,
+    ma non hanno una voce sintetica: a voce accesa quelle lingue resterebbero
+    mute. Il programma lo segnala.
+  </p>
+  <p>
+    Il pulsante <strong>Prova</strong> pronuncia una frase di esempio con la voce
+    scelta. Funziona solo a conversazione già avviata.
+  </p>
+
+  <h3>Far arrivare la voce all'interlocutore</h3>
+  <p>
+    Questa parte si fa <strong>una volta sola per call</strong>. Il programma crea
+    un <strong>microfono virtuale</strong> nel sistema: un dispositivo che la
+    videoconferenza vede come un microfono normale, dentro cui il programma può
+    mettere la voce sintetica.
+  </p>
+  <ol>
+    <li>Spunta <strong>Voce</strong> e scegli la voce, prima di premere Avvia.</li>
+    <li>Premi <strong>Avvia</strong>. Compare la scritta con il nome del microfono da scegliere.</li>
+    <li>Nella call, imposta come microfono <code>Monitor of VoxPopuli_Mic</code>.</li>
+    <li>Premi <strong>Prova</strong> e verifica che la voce si senta.</li>
+  </ol>
+  <p>
+    Se salti il punto 3, lui continua a sentirti nella tua lingua e la voce
+    sintetica resta muta: è l'errore più facile da fare.
+  </p>
+  <p>Alla chiusura del programma il microfono virtuale viene rimosso e il sistema
+  torna come prima. Se per un blocco il programma non si chiude bene, si tolgono
+  a mano con:</p>
+<pre><code>pactl unload-module module-null-sink
+pactl unload-module module-loopback</code></pre>
+</section>
+
+<section id="aspetto">
+  <h2>6. Aspetto</h2>
+  <p>
+    Sei schemi di colore, dal menu <strong>Colori</strong>: Scuro (ciano), Chiaro,
+    Ambra (terminale), Verde fosforo, Notte (viola), Alto contrasto. Si applicano
+    subito, anche alle finestre già aperte e a quella che stai condividendo.
+  </p>
+  <p>
+    Servono a leggere meglio: c'è chi lavora al buio, chi in pieno sole, e chi ha
+    bisogno del massimo contrasto. <strong>Alto contrasto</strong> è pensato per
+    chi ha problemi di vista o lavora in condizioni di luce difficile.
+  </p>
+  <p>
+    Il carattere delle due finestre si regola dalle preferenze
+    (<code>font_size</code> per il pannello, <code>speaker_font_size</code> per la
+    finestra condivisa, nel file <code>config.json</code>).
+  </p>
+</section>
+
+<section id="cuffie">
+  <h2>7. Cuffie e casse</h2>
+  <p>
+    <strong>Con le cuffie non c'è nessun problema</strong>: la voce dell'altro
+    finisce nelle tue orecchie e non rientra dal microfono.
+  </p>
+  <p>
+    <strong>Con le casse</strong> la voce di chi parla esce dagli altoparlanti,
+    rientra dal microfono e verrebbe trascritta come se fossi tu, generando frasi
+    fantasma. Il programma se ne accorge e sospende il microfono mentre l'altro
+    parla — è la casella <strong>Non trascrivere il microfono mentre l'altro parla
+    (evita l'eco)</strong>, attiva di default. Funziona, ma se parlate insieme una
+    delle due frasi si perde.
+  </p>
+  <p>Se puoi, usa le cuffie. Se non puoi, lascia la casella attiva e parla a turni.</p>
+</section>
+
+<section id="latenza">
+  <h2>8. Latenza</h2>
+  <p>Misurata su una macchina con i5-1235U, a modelli già caricati:</p>
+  <table>
+    <tr><th>Stadio</th><th>Tempo</th></tr>
+    <tr><td>Attesa di fine frase</td><td>~0,6 s</td></tr>
+    <tr><td>Trascrizione</td><td>~1,75 s</td></tr>
+    <tr><td>Traduzione</td><td>~0,06 s</td></tr>
+    <tr><td><strong>Totale percepito</strong></td><td><strong>~2,4 s</strong></td></tr>
+  </table>
+  <p>
+    In pratica: leggi la traduzione della frase precedente mentre l'altro sta già
+    dicendo la successiva. Conviene rassegnarsi a questo ritmo, invece di
+    aspettare il testo prima di rispondere — altrimenti la conversazione si
+    impunta.
+  </p>
+  <p>
+    La prima frase dopo l'avvio è più lenta: i modelli si stanno caricando. Vale
+    la pena avviare il programma qualche minuto prima della call.
+  </p>
+</section>
+
+<section id="problemi">
+  <h2>9. Se qualcosa non va</h2>
+
+  <h3>Il pannello non mostra niente mentre l'altro parla</h3>
+  <p>
+    Il menu <strong>Ascolta</strong> non punta al monitor giusto. Prova le altre
+    voci finché non appare il testo. Controlla anche che l'audio dell'altro esca
+    davvero dalle casse o dalle cuffie che stai monitorando.
+  </p>
+
+  <h3>Non appare niente nel riquadro TU</h3>
+  <p>
+    Il <strong>Microfono</strong> scelto non è quello che stai usando, oppure è
+    muto a livello di sistema. Prova con <code>python3 -m voxpopuli.cli live</code>
+    e parla: se non compare niente nemmeno lì, il problema è nel dispositivo.
+  </p>
+
+  <h3>Le frasi si spezzano a metà</h3>
+  <p>
+    Il rumore di fondo o una pausa lunga. Parla con frasi intere e un tono
+    uniforme; avvicinati al microfono se l'ambiente è rumoroso.
+  </p>
+
+  <h3>La traduzione è sbagliata o senza senso</h3>
+  <p>
+    Succede con frasi molto brevi o con frasi lasciate a metà. Il motore è locale
+    e gratuito: sui discorsi completi se la cava bene, sulle interiezioni no.
+    Parla per frasi compiute.
+  </p>
+
+  <h3>Una lingua non c'è nel menu</h3>
+  <p>
+    O non è fra le 50 supportate, o mancano i modelli: scegli la coppia e premi
+    <strong>Installa modelli</strong>. La lingua deve essere disponibile sia per
+    la traduzione sia, se usi la voce, per la sintesi.
+  </p>
+
+  <h3>La voce sintetica non si sente nella call</h3>
+  <p>
+    Il microfono della videoconferenza non è <code>Monitor of VoxPopuli_Mic</code>.
+    È il punto 3 della sezione 5.
+  </p>
+
+  <h3>Il programma sembra bloccato al primo avvio</h3>
+  <p>
+    Sta scaricando il modello di trascrizione (~465 MB) e non lo dice ancora in
+    modo visibile. Guarda il terminale da cui l'hai avviato: se c'è scritto
+    <code>[stt] modello 'small' assente</code>, è quello. Aspetta.
+  </p>
+
+  <h3><code>parec</code> o <code>pactl</code> non trovati</h3>
+  <p><code>sudo apt install pulseaudio-utils</code>. Con PipeWire funzionano lo stesso.</p>
+
+  <h3>La finestra non resta sopra le altre</h3>
+  <p>Su Wayland <code>set_keep_above</code> può non funzionare: usa una sessione X11.</p>
+</section>
+
+<section id="terminal">
+  <h2>10. Comandi da terminale</h2>
+  <p>Servono per le prove, senza aprire l'interfaccia:</p>
+<pre><code>python3 -m voxpopuli.cli diagnosi                  # dipendenze, modelli, sorgenti audio
+python3 -m voxpopuli.cli dispositivi               # elenca monitor e microfoni
+python3 -m voxpopuli.cli file audio.mp3 en         # trascrive e traduce un file
+python3 -m voxpopuli.cli live                      # cattura dal vivo, stampa a terminale</code></pre>
+  <p>
+    <code>diagnosi</code> è il primo comando da eseguire quando qualcosa non va:
+    dice cosa manca e dove.
+  </p>
+  <p>
+    <code>file</code> accetta come secondo argomento la lingua parlata nel file
+    (una delle 50). <code>live</code> accetta <code>--remoto NOME</code>,
+    <code>--mic NOME</code> e <code>--no-half-duplex</code>.
+  </p>
+
+  <h3>Generare le schermate del README</h3>
+<pre><code>python3 tools/anteprima.py [cartella_campioni] [cartella_uscita]</code></pre>
+  <p>
+    Fa girare i modelli veri su alcuni campioni audio e fotografa le finestre
+    reali. Le immagini finiscono in <code>/tmp</code> per impostazione predefinita.
+  </p>
+</section>
+
+<section id="requisiti">
+  <h2>11. Requisiti</h2>
+  <ul>
+    <li>Linux con PulseAudio o PipeWire (<code>parec</code> e <code>pactl</code>)</li>
+    <li>Sessione <strong>X11</strong> — su Wayland la finestra sempre-in-alto può non funzionare</li>
+    <li>Python 3.10 o superiore, PyGObject e GTK 3</li>
+    <li>Una CPU decente: la trascrizione gira su processore, senza GPU</li>
+    <li>~700 MB liberi per i modelli</li>
+  </ul>
+</section>
+
+<section id="licenza">
+  <h2>12. Licenza</h2>
+  <p>
+    Vox Populi è software libero sotto <strong>GNU AGPL v3.0 o successiva</strong>.
+    Per usi che non possono rispettarne gli obblighi di copyleft — integrazione in
+    prodotti chiusi, erogazione come servizio senza pubblicare il sorgente — è
+    disponibile una
+    <a href="https://github.com/RedRider21/vox-populi/blob/master/COMMERCIAL.md">licenza commerciale</a>
+    separata.
+  </p>
+  <p>
+    Chi vuole contribuire trova le condizioni nel
+    <a href="https://github.com/RedRider21/vox-populi/blob/master/CLA.md">CLA</a>.
+  </p>
+  <p><strong>Autore</strong>: Daniele Deplano (RedRider21) — deplano.d@gmail.com</p>
+</section>
+
+</main>
+
+<footer>
+  <div class="riga">
+    <span>Vox Populi — Daniele Deplano (RedRider21)</span>
+    <a href="index.html">Home</a>
+    <a href="https://github.com/RedRider21/vox-populi">GitHub</a>
+    <a href="https://github.com/RedRider21/vox-populi/blob/master/COMMERCIAL.md">Licenza commerciale</a>
+  </div>
+</footer>
+
+<button id="torna-su" type="button" aria-label="Torna su">↑</button>
+
+<script src="sito.js"></script>
+</body>
+</html>
