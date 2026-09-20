@@ -1,6 +1,6 @@
 # Vox Populi
 
-Traduzione simultanea italiano ⇄ inglese per le videochiamate, tutta in locale.
+Traduzione simultanea per le videochiamate, in **50 lingue** e tutta in locale.
 
 Nasce da un'esigenza concreta: sostenere una call Google Meet con un
 interlocutore di Mumbai che parla inglese, senza padroneggiare l'inglese. Il
