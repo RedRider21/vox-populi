@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Daniele Deplano (RedRider21)
+#
+# Avvio di Vox Populi installato dal pacchetto .deb.
+#
+# Il pacchetto mette il codice in /usr/lib/vox-populi e le dipendenze di
+# sistema (GTK3, parec, ffmpeg). Le librerie Python che Debian/Ubuntu non
+# confezionano - faster-whisper, argostranslate, edge-tts e la catena che si
+# portano dietro, torch compreso - stanno invece in un ambiente dedicato
+# dentro la cartella dati dell'utente.
+#
+# Quell'ambiente si crea al PRIMO AVVIO, non durante l'installazione del
+# pacchetto: cosi' dpkg resta immediato e si sa in anticipo quanto si scarica.
+#
+#   vox-populi              avvia il pannello
+#   vox-populi --prepara    crea (o ripara) solo l'ambiente, senza avviare
+#   vox-populi --avvia      avvia subito la cattura, senza premere Avvia
+
+set -euo pipefail
+
+PREFISSO="/usr"
+CODICE="$PREFISSO/lib/vox-populi"
+DATI="${VOXPOPULI_DATA_DIR:-$HOME/.local/share/vox-populi}"
+VENV="$DATI/venv"
+REQUISITI="$CODICE/requirements.txt"
+
+OK="\033[32m"; KO="\033[31m"; AVV="\033[33m"; FINE="\033[0m"
+ok()  { printf "${OK}  ok${FINE}  %s\n" "$1" >&2; }
+ko()  { printf "${KO}  !!${FINE}  %s\n" "$1" >&2; }
+
+# Con le finestre aperte non c'e' un terminale da cui leggere: in quel caso le
+# domande passano da zenity, se c'e'. Senza ne' l'uno ne' l'altro non si puo'
+# chiedere niente, e lo si dice invece di restare appesi.
+ha_terminale() { [ -t 0 ] && [ -t 2 ]; }
+ha_zenity()    { command -v zenity >/dev/null 2>&1; }
+
+chiedi() {   # chiedi "domanda" -> 0 se si', 1 se no
+    local domanda="$1"
+    if ha_terminale; then
+        local risposta
+        read -r -p "$domanda [S/n] " risposta
+        case "${risposta:-s}" in [nN]*) return 1 ;; *) return 0 ;; esac
+    elif ha_zenity; then
+        zenity --question --title="Vox Populi" --width=460 \
+               --ok-label="Procedi" --cancel-label="Annulla" --text="$domanda"
+        return $?
+    else
+        ko "serve una risposta, ma non c'e' ne' un terminale ne' zenity."
+        echo "     Rilancia da terminale:  vox-populi --prepara" >&2
+        exit 1
+    fi
+}
+
+# --------------------------------------------------------------- codice -----
+if [ ! -d "$CODICE/voxpopuli" ]; then
+    ko "il codice non e' in $CODICE: installazione rotta, reinstalla il pacchetto."
+    exit 1
+fi
+export PYTHONPATH="$CODICE${PYTHONPATH:+:$PYTHONPATH}"
+
+# ----------------------------------------------------------- interprete -----
+# Se l'ambiente dedicato esiste si usa quello, altrimenti il Python di sistema
+# (che avra' almeno GTK3, arrivata come dipendenza del pacchetto).
+if [ -x "$VENV/bin/python3" ] && "$VENV/bin/python3" -c "import voxpopuli" 2>/dev/null; then
+    PY="$VENV/bin/python3"
+else
+    PY="python3"
+fi
+
+dipendenze_ok() {
+    "$PY" -c "import faster_whisper, argostranslate, edge_tts, sounddevice" 2>/dev/null
+}
+
+# ------------------------------------------------------------ ambiente ------
+prepara() {
+    echo "Vox Populi usa librerie Python che Debian e Ubuntu non confezionano." >&2
+    echo "Le metto in un ambiente dedicato, senza toccare il Python di sistema" >&2
+    echo "ne' gli altri programmi:" >&2
+    echo "    $VENV" >&2
+    echo >&2
+    # Le cifre sono misurate, non stimate: torch da solo pesa 750 MB, il
+    # resto altrettanto. Il download e' grosso e va detto prima, non dopo.
+    echo "Cosa scarica, e quanto pesa:" >&2
+    echo "    torch (variante CPU, non quella per GPU)   ~750 MB" >&2
+    echo "    faster-whisper, argostranslate, edge-tts   ~750 MB" >&2
+    echo "    ----------------------------------------------------" >&2
+    echo "    totale al primo avvio                     ~1,5 GB" >&2
+    echo >&2
+    echo "torch c'e' solo per la traduzione, e viene chiesto nella versione" >&2
+    echo "per CPU: e' la meta' di quella per le schede video, che non serve." >&2
+    echo >&2
+    echo "I modelli di trascrizione e traduzione (~655 MB) si scaricano dopo," >&2
+    echo "sempre chiedendo prima, all'avvio o da install.sh." >&2
+    echo >&2
+
+    chiedi "Procedo con l'installazione delle librerie?" || {
+        echo "Annullato: non e' stato scaricato niente." >&2
+        exit 0
+    }
+
+    command -v python3 >/dev/null || { ko "manca python3"; exit 1; }
+    python3 -c "import venv" 2>/dev/null || {
+        ko "manca il modulo venv: installa python3-venv"; exit 1; }
+
+    mkdir -p "$DATI"
+    avv_crea=0
+    [ -d "$VENV" ] || avv_crea=1
+
+    # --system-site-packages: GTK3 e numpy arrivano dai pacchetti di sistema,
+    # non vanno riscaricati in versione pip.
+    python3 -m venv --system-site-packages "$VENV"
+    ok "ambiente creato in $VENV"
+
+    "$VENV/bin/pip" install --quiet --upgrade pip 2>&1 | tail -2 || true
+
+    echo "  ..  scarico torch nella variante CPU" >&2
+    if ! "$VENV/bin/pip" install torch --index-url https://download.pytorch.org/whl/cpu; then
+        ko "torch non si e' installato. Riprova: vox-populi --prepara"
+        exit 1
+    fi
+    ok "torch installato"
+
+    echo "  ..  scarico le librerie dell'applicazione" >&2
+    if ! "$VENV/bin/pip" install -r "$REQUISITI"; then
+        ko "installazione non riuscita. Riprova: vox-populi --prepara"
+        exit 1
+    fi
+    ok "librerie installate"
+
+    PY="$VENV/bin/python3"
+    dipendenze_ok || { ko "le librerie ci sono ma non si caricano: riprova --prepara"; exit 1; }
+}
+
+# ---------------------------------------------------------------- avvio -----
+SOLO_PREPARA=0
+ARGOMENTI=()
+for a in "$@"; do
+    case "$a" in
+        --prepara) SOLO_PREPARA=1 ;;
+        *) ARGOMENTI+=("$a") ;;
+    esac
+done
+
+if ! dipendenze_ok; then
+    if [ "$SOLO_PREPARA" = 0 ]; then
+        echo >&2
+        echo "Prima di partire, Vox Populi deve preparare le sue librerie." >&2
+        echo >&2
+    fi
+    prepara
+    [ "$SOLO_PREPARA" = 1 ] && { ok "tutto pronto. Avvia con:  vox-populi"; exit 0; }
+fi
+
+if [ "$SOLO_PREPARA" = 1 ]; then
+    ok "l'ambiente e' gia' a posto, non c'e' niente da scaricare."
+    exit 0
+fi
+
+exec "$PY" -m voxpopuli.main "${ARGOMENTI[@]:-}"

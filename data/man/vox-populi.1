@@ -1,0 +1,95 @@
+.TH VOX-POPULI 1 "20 settembre 2026" "Vox Populi 0.1.0" "Comandi utente"
+.SH NOME
+vox-populi \- sottotitoli e voce tradotti in tempo reale per le videochiamate
+.SH SINTASSI
+.B vox-populi
+.RI [ opzioni ]
+.SH DESCRIZIONE
+.B Vox Populi
+ascolta la voce dell'interlocutore (dal monitor delle casse o delle cuffie) e
+la propria (dal microfono), le trascrive con Whisper, le traduce con
+argostranslate e le mostra in due finestre:
+.PP
+.RS 4
+\- un
+.B pannello
+che resta sopra la videochiamata, visibile solo a chi usa il programma;
+.br
+\- una
+.B finestra da condividere
+con l'interlocutore, con il testo grande e ad alto contrasto.
+.RE
+.PP
+L'interlocutore non installa niente: vede solo una finestra condivisa, come se
+fosse una presentazione.
+.PP
+Tutto avviene sul computer di chi lo usa: nessun servizio esterno, nessuna
+chiave API. I sottotitoli funzionano anche senza connessione; la voce
+sintetica e l'elenco aggiornato delle voci richiedono Internet.
+.PP
+Al primo avvio il programma scarica i modelli di trascrizione e traduzione
+(circa 655 MB) e, se e' stato installato dal pacchetto, prepara le sue
+librerie Python. In entrambi i casi
+.B chiede conferma prima
+di scaricare qualsiasi cosa, e dice quanto pesa.
+.SH OPZIONI
+.TP
+.B \-\-avvia
+Avvia subito la cattura, senza dover premere il pulsante
+.B Avvia
+nel pannello.
+.TP
+.B \-\-prepara
+Crea o ripara soltanto l'ambiente Python dell'applicazione, senza avviare
+l'interfaccia. Serve quando le librerie mancano e non c'e' un terminale da cui
+rispondere alla domanda, o per preparare tutto in anticipo rispetto alla
+chiamata.
+.SH FILE
+.TP
+.I ~/.local/share/vox-populi/
+Una cartella sola con tutto: preferenze (config.json), elenco delle voci
+(voci.json), i modelli di traduzione (modelli/) e quello di trascrizione
+(whisper/). Si puo' copiare, spostare o cancellare in un colpo solo. Il
+percorso si cambia con la variabile
+.BR VOXPOPULI_DATA_DIR .
+.TP
+.I ~/.local/share/vox-populi/config.json
+Dispositivi scelti, lingue, tema, dimensione del carattere e posizione delle
+finestre. Viene ricordato fra un avvio e l'altro.
+.TP
+.I /usr/lib/vox-populi/
+Il codice, quando il programma e' installato dal pacchetto.
+.SH ESEMPI
+Avvio normale:
+.PP
+.RS 4
+.B vox-populi
+.RE
+.PP
+Preparare le librerie senza aprire l'interfaccia:
+.PP
+.RS 4
+.B vox-populi \-\-prepara
+.RE
+.PP
+Prove da terminale, senza interfaccia grafica:
+.PP
+.RS 4
+.B python3 \-m voxpopuli.cli diagnosi
+.br
+.B python3 \-m voxpopuli.cli dispositivi
+.br
+.B python3 \-m voxpopuli.cli file audio.mp3 en
+.RE
+.SH VEDERE ANCHE
+Il manuale completo e la guida per il giorno della chiamata sono installati in
+.IR /usr/share/doc/vox-populi/ ,
+e pubblicati su
+.IR https://redrider21.github.io/vox-populi/ .
+.SH AUTORE
+Daniele Deplano (RedRider21) <deplano.d@gmail.com>
+.SH LICENZA
+GNU Affero General Public License v3.0 o successiva (AGPL\-3.0\-or\-later).
+E' disponibile anche una licenza commerciale alternativa: vedi
+.I COMMERCIAL.md
+nel repository.

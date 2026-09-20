@@ -8,13 +8,23 @@
 # Installazione:  pip install -r requirements.txt
 
 # Trascrizione vocale, gira su CPU senza GPU e senza chiavi API.
-faster-whisper==0.10.0
+#
+# NON riabbassare a 0.10.0: quella versione pretende PyAV 10, di cui esistono
+# solo i sorgenti e nessuna wheel. Su una macchina pulita pip proverebbe a
+# compilarlo e fallirebbe, perche' servono gli header di ffmpeg. Dalla 1.x in
+# poi PyAV arriva come wheel gia' pronta e l'installazione fila liscia.
+#
+# Verificato sui campioni in /tmp/vp_test: la 1.2.1 trascrive come la 0.10.0,
+# e su una frase la azzecca pure meglio ("send me the updated price list"
+# contro "send media updated price list").
+faster-whisper==1.2.1
 ctranslate2==4.8.2
 
 # Traduzione neurale offline, con i modelli it<->en installati da install.sh.
 argostranslate==1.11.0
 
-# NumPy per il rilevatore di attivita' vocale.
+# NumPy per il rilevatore di attivita' vocale. Con la serie 2.x e' tutto
+# verificato: argostranslate traduce e faster-whisper trascrive.
 numpy>=1.24
 
 # Riproduzione della voce sintetica sul dispositivo virtuale (fase 4).

@@ -5,3 +5,7 @@ __pycache__/
 venv/
 *.egg-info/
 .cache/
+
+# Il pacchetto .deb e la sua impronta: sono artefatti, si ricostruiscono con
+# tools/make-deb.sh e si scaricano dalla pagina delle release.
+packaging/

@@ -7,6 +7,10 @@
 # Uso:
 #     ./install.sh          chiede conferma prima di scaricare i modelli
 #     ./install.sh --si     procede senza chiedere (per script automatici)
+#     ./install.sh --prefix=/usr
+#                           copia SOLO i file sotto quella radice, senza
+#                           toccare apt, pip o i modelli: serve a costruire il
+#                           pacchetto .deb. Rispetta DESTDIR.
 #
 # Lo script e' idempotente: rilanciarlo non fa danni, salta cio' che c'e' gia'.
 # Prima di scaricare qualsiasi cosa dice quanto occupa e dove finisce.
@@ -20,6 +24,67 @@ OK="\033[32m"; KO="\033[31m"; AVV="\033[33m"; FINE="\033[0m"
 ok()   { printf "${OK}  ok${FINE}  %s\n" "$1"; }
 ko()   { printf "${KO}  !!${FINE}  %s\n" "$1"; }
 avv()  { printf "${AVV}  ..${FINE}  %s\n" "$1"; }
+
+# ------------------------------------------- albero per il pacchetto ------
+# Con --prefix non si installa niente nel sistema e non si scarica niente:
+# si copiano i file dentro una radice (DESTDIR) e basta. Lo usa
+# tools/make-deb.sh, cosi' il contenuto del pacchetto e' esattamente cio' che
+# installerebbe questo script, senza tenere due liste di file da allineare.
+PREFIX=""
+for arg in "$@"; do
+    case "$arg" in
+        --prefix=*) PREFIX="${arg#--prefix=}" ;;
+    esac
+done
+
+if [[ -n "$PREFIX" ]]; then
+    BASE="${DESTDIR:-}$PREFIX"
+    echo "=== Vox Populi: preparo l'albero in $BASE ==="
+
+    # Il codice, senza bytecode: i .pyc li rigenera il postinst sulla macchina
+    # di destinazione, e quelli di un'altra versione di Python farebbero
+    # eseguire codice vecchio.
+    install -d "$BASE/lib/vox-populi"
+    cp -r "$ROOT_DIR/voxpopuli" "$BASE/lib/vox-populi/"
+    find "$BASE/lib/vox-populi" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
+    find "$BASE/lib/vox-populi" -name '*.pyc' -delete 2>/dev/null || true
+    # I permessi non devono dipendere dall'umask di chi costruisce: nel
+    # pacchetto Debian i file sono 0644 e le cartelle 0755, sempre.
+    find "$BASE/lib/vox-populi" -type d -exec chmod 755 {} +
+    find "$BASE/lib/vox-populi" -type f -exec chmod 644 {} +
+    install -m 644 "$ROOT_DIR/requirements.txt" "$BASE/lib/vox-populi/requirements.txt"
+
+    # Il comando: quello "di sistema", che prepara l'ambiente al primo avvio.
+    install -d "$BASE/bin"
+    install -m 755 "$ROOT_DIR/data/vox-populi-system" "$BASE/bin/vox-populi"
+
+    # Voce di menu e icone
+    install -d "$BASE/share/applications"
+    install -m 644 "$ROOT_DIR/data/applications/vox-populi.desktop" \
+        "$BASE/share/applications/vox-populi.desktop"
+    for lato in 32 48 64 128 256; do
+        install -d "$BASE/share/icons/hicolor/${lato}x${lato}/apps"
+        install -m 644 "$ROOT_DIR/data/icons/vox-populi-$lato.png" \
+            "$BASE/share/icons/hicolor/${lato}x${lato}/apps/vox-populi.png"
+    done
+
+    # Documentazione
+    install -d "$BASE/share/doc/vox-populi"
+    for f in README.md COPYRIGHT COMMERCIAL.md CLA.md \
+             docs/manuale.md docs/guida-call.md; do
+        if [[ -f "$ROOT_DIR/$f" ]]; then
+            install -m 644 "$ROOT_DIR/$f" "$BASE/share/doc/vox-populi/$(basename "$f")"
+        fi
+    done
+
+    # Pagina di manuale
+    install -d "$BASE/share/man/man1"
+    install -m 644 "$ROOT_DIR/data/man/vox-populi.1" \
+        "$BASE/share/man/man1/vox-populi.1"
+
+    echo "  ok  albero pronto ($(du -sk "$BASE" | cut -f1) KB)"
+    exit 0
+fi
 
 echo "=== Vox Populi: installazione ==="
 echo

@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Vox Populi
+Name[en]=Vox Populi
+Comment=Traduzione simultanea per le videochiamate, in 50 lingue e tutta in locale
+Comment[en]=Real-time translation for video calls, 50 languages, all on your own computer
+Comment[fr]=Traduction simultanée pour les appels vidéo, 50 langues, entièrement en local
+Comment[es]=Traducción simultánea para videollamadas, 50 idiomas y todo en local
+Comment[de]=Simultanübersetzung für Videoanrufe, 50 Sprachen, alles lokal
+Exec=vox-populi
+TryExec=vox-populi
+Icon=vox-populi
+Terminal=false
+Categories=AudioVideo;Audio;Utility;GTK;
+Keywords=traduzione;translation;traduction;sottotitoli;subtitles;meet;videochiamata;call;voce;voice;
+StartupNotify=true
