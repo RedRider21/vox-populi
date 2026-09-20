@@ -80,7 +80,14 @@ class Motore:
         modello: str | None = None,
         prompt: str | None = None,
         on_parlato_locale: Callable[[], None] | None = None,
+        lingua_mia: str = C.LANG_IT,
+        lingua_sua: str = C.LANG_EN,
     ) -> None:
+        # Le due lingue della conversazione. Da queste dipendono tutte e
+        # quattro le direzioni: trascrivo nella lingua di chi parla, traduco
+        # verso quella di chi ascolta.
+        self.lingua_mia = lingua_mia
+        self.lingua_sua = lingua_sua
         self.sorgente_remota = sorgente_remota
         self.sorgente_mic = sorgente_mic
         self.on_risultato = on_risultato
@@ -109,7 +116,7 @@ class Motore:
         if self.stato.attivo:
             return
         t_stt = stt.prepara(self.modello)
-        t_mt = mt.prepara()
+        t_mt = mt.prepara(self.lingua_mia, self.lingua_sua)
         print(f"[motore] modelli pronti (whisper {t_stt:.1f}s, traduzione {t_mt:.1f}s)")
 
         self._stop.clear()
@@ -224,8 +231,10 @@ class Motore:
             except queue.Empty:
                 continue
 
+            # Lui parla la sua lingua e va reso nella mia; io il contrario.
             da, a = (
-                mt.direzione_remota() if flusso == "remoto" else mt.direzione_locale()
+                (self.lingua_sua, self.lingua_mia) if flusso == "remoto"
+                else (self.lingua_mia, self.lingua_sua)
             )
             durata = segmento.size / C.SAMPLE_RATE
             try:

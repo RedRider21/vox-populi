@@ -12,6 +12,16 @@ account, nessun programma. Usa Meet come ha sempre fatto e vede solo una
 finestra condivisa, come se fosse una presentazione. Tutto il lavoro avviene
 sul tuo PC.
 
+> ### Da leggere prima di scaricare
+>
+> Il programma funziona con modelli che **non stanno in questo repository**:
+> al primo avvio ne scarica **circa 655 MB**, e ogni lingua in più rispetto
+> alla coppia italiano/inglese ne costa altri 190 circa. Non parte nessun
+> download da solo — `install.sh` chiede conferma, e dall'app i modelli si
+> scaricano solo premendo **Installa modelli**. Tutto finisce in
+> `~/.local/share/vox-populi/`, una cartella sola che puoi cancellare quando
+> vuoi. L'installazione non tocca nient'altro sul tuo sistema.
+
 ## Come funziona
 
 ```
@@ -66,6 +76,11 @@ Per una conversazione normale, i sottotitoli da soli sono più reattivi.
 
 ## Installazione
 
+> **Prima di iniziare: il programma scarica circa 655 MB di modelli.**
+> Non sono nel repository e non sono opzionali — senza, non trascrive e non
+> traduce. Lo script lo dice e chiede conferma prima di scaricare qualcosa.
+> Per procedere senza domande (script automatici): `./install.sh --si`.
+
 Su Debian/Ubuntu e affini:
 
 ```bash
@@ -73,11 +88,31 @@ Su Debian/Ubuntu e affini:
 ```
 
 Lo script installa i pacchetti di sistema mancanti (`python3-gi`,
-`pulseaudio-utils`, `ffmpeg`), le dipendenze Python e i modelli di traduzione,
-poi esegue una diagnosi. È idempotente: rilanciarlo non fa danni.
+`pulseaudio-utils`, `ffmpeg`), le dipendenze Python e i modelli, poi esegue una
+diagnosi. È idempotente: rilanciarlo non fa danni e non riscarica nulla.
 
-La trascrizione usa il modello `small` di Whisper, circa 500 MB: se non è già
-nella cache viene scaricato al primo avvio.
+### Cosa viene scaricato
+
+| Cosa | Dove | Spazio |
+|---|---|---|
+| Trascrizione — Whisper `small` | `~/.local/share/vox-populi/whisper/` | ~465 MB |
+| Traduzione italiano ↔ inglese | `~/.local/share/vox-populi/modelli/` | ~190 MB |
+| **Totale al primo avvio** | | **~655 MB** |
+
+Ogni lingua in più rispetto alla coppia italiano/inglese costa circa 190 MB per
+direzione, e si scarica dall'app con **Installa modelli**, non da `install.sh`.
+Non c'è nessun download che parta da solo: o lo chiede `install.sh`, o lo
+chiedi tu dal pannello.
+
+Tutto sta in **una cartella sola**, `~/.local/share/vox-populi/`: preferenze,
+elenco delle voci, modelli di traduzione e modello di trascrizione. Per
+liberare lo spazio basta cancellarla; per portarti il programma su un'altra
+macchina basta copiarla. Il percorso si può cambiare con la variabile
+d'ambiente `VOXPOPULI_DATA_DIR`.
+
+Chi aveva già usato una versione precedente ha i dati sparsi fra `~/.config`,
+`~/.cache` e `~/.local/share/argos-translate`: lo script li porta nella
+cartella unica senza riscaricarli.
 
 ## Uso
 
@@ -89,16 +124,24 @@ nella cache viene scaricato al primo avvio.
 
 Si aprono due finestre. Poi, in ordine:
 
-1. **Nel pannello**, controlla i due menu in basso:
+1. **Nel pannello**, controlla i menu:
    - **Ascolta** — la sorgente della voce dell'interlocutore. Scegli il
      *monitor* dell'uscita audio che stai usando: se hai le cuffie, il monitor
      delle cuffie; se usi le casse, il monitor delle casse.
    - **Microfono** — il tuo microfono.
+   - **Parlo / Lui parla** — le due lingue della conversazione. Se la coppia
+     scelta non è ancora installata compare **Installa modelli**: dimmi quanto
+     scaricherà prima di farlo. Vale la pena farlo *prima* della call, non
+     durante.
+   - **Colori** — sei schemi già pronti, che si applicano subito anche a
+     finestre aperte, compresa quella che stai condividendo.
    La scelta viene ricordata per la volta successiva.
 
 2. **Se vuoi la voce sintetica**, spunta **Voce inglese** e scegli quale voce
-   (le prime tre hanno accento indiano). Il pulsante **Prova** fa pronunciare
-   una frase di esempio, ma funziona solo a conversazione avviata.
+   fra quelle della lingua dell'interlocutore: sono le voci neurali di
+   Microsoft, più di 300 in 75 lingue, ognuna con la sua nazionalità. Il
+   pulsante **Prova** fa pronunciare una frase di esempio, ma funziona solo a
+   conversazione avviata.
 
 3. **Premi Avvia.** La prima volta carica i modelli: qualche secondo, poi
    compare `● in ascolto`. A voce accesa compare anche la scritta con il
@@ -115,6 +158,30 @@ Si aprono due finestre. Poi, in ordine:
 
 6. **Parla normalmente.** Le frasi tradotte appaiono nel pannello e, per le
    tue, anche nella finestra condivisa.
+
+### Lingue e voci
+
+**50 lingue** per la traduzione, **75** per la voce sintetica, **322 voci**
+diverse. Non sono le stesse liste: servono entrambe, e la lingua dell'app è
+quella che compare in tutti e due i menu.
+
+Su 50 lingue traducibili, **44 hanno anche una voce sintetica** con cui
+l'interlocutore può sentirle. Le altre 6 (esperanto, basco, chirghiso,
+portoghese brasiliano, tagalog, cinese tradizionale) si traducono e basta: si
+leggono, non si pronunciano.
+
+Le lingue si scelgono dal pannello, e si possono cambiare anche a metà
+conversazione. I modelli di traduzione fra italiano e inglese ci sono sempre;
+per tutte le altre coppie il programma passa dall'inglese come lingua ponte
+(`italiano → inglese → tedesco`), perché è l'unica che argostranslate collega
+un po' con tutte. Funziona, ma allunga leggermente la traduzione: la diagnosi
+lo dice quando accade.
+
+Le voci non sono un elenco fisso scritto nel programma: vengono chieste al
+servizio di Microsoft e messe in cache per 30 giorni, così restano aggiornate
+da sole. Ognuna porta con sé genere e nazionalità (`Prabhat · maschile ·
+India`), utile per far parlare l'interlocutore con la voce di casa sua invece
+che con un accento a caso.
 
 ### Le cuffie sono meglio delle casse
 
@@ -184,8 +251,10 @@ vox-populi
 └── COMMERCIAL.md        licenza commerciale alternativa
 ```
 
-Le preferenze (dispositivi scelti, dimensione del carattere, posizione delle
-finestre) stanno in `~/.config/vox-populi/config.json`.
+Le preferenze (dispositivi scelti, lingue, tema, dimensione del carattere,
+posizione delle finestre) stanno in `~/.local/share/vox-populi/config.json`,
+insieme a tutto il resto: l'intera cartella si copia, si sposta o si cancella
+in un colpo solo.
 
 ## Se qualcosa non va
 

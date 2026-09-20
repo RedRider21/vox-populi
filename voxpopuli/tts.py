@@ -19,24 +19,66 @@ e' finito. Se qualcosa va storto, il `finally` lo riapre comunque.
 from __future__ import annotations
 
 import asyncio
+import json
 import queue
 import shutil
 import subprocess
 import tempfile
 import threading
+import time
 from pathlib import Path
 
-# Voci neurali indiane: la prima maschile, la seconda femminile. Entrambe
-# rendono l'inglese con l'accento di Mumbai, che e' quello che l'interlocutore
-# si aspetta di sentire.
-VOCI = {
-    "en-IN-PrabhatNeural": "maschile, accento indiano",
-    "en-IN-NeerjaNeural": "femminile, accento indiano",
-    "en-IN-NeerjaExpressiveNeural": "femminile, piu' espressiva",
-    "en-GB-RyanNeural": "maschile britannico",
-    "en-US-GuyNeural": "maschile americano",
+from . import config as C
+
+# Le voci disponibili sono oltre trecento, in 75 lingue, e le elenca edge-tts
+# interrogando il servizio: non sono elencate a mano perche' cambiano nel
+# tempo. La lista viene messa in cache su disco, cosi' l'interfaccia si apre
+# subito e continua a funzionare anche senza rete.
+VOCI_CACHE = C.VOCI_CACHE
+VOCI_CACHE_GIORNI = 30
+
+# Riserva usata al primo avvio senza rete, o se la cache e' illeggibile:
+# poche voci per le due lingue di partenza. Senza queste, l'interfaccia
+# mostrerebbe un menu vuoto prima ancora di aver mai parlato col servizio.
+VOCI_FALLBACK: dict[str, dict[str, str]] = {
+    "en": {
+        "en-IN-PrabhatNeural": "Prabhat · maschile · India",
+        "en-IN-NeerjaNeural": "Neerja · femminile · India",
+        "en-IN-NeerjaExpressiveNeural": "Neerja espressiva · femminile · India",
+        "en-GB-RyanNeural": "Ryan · maschile · Regno Unito",
+        "en-US-GuyNeural": "Guy · maschile · Stati Uniti",
+        "en-US-AriaNeural": "Aria · femminile · Stati Uniti",
+    },
+    "it": {
+        "it-IT-DiegoNeural": "Diego · maschile · Italia",
+        "it-IT-ElsaNeural": "Elsa · femminile · Italia",
+        "it-IT-IsabellaNeural": "Isabella · femminile · Italia",
+        "it-IT-GiuseppeMultilingualNeural": "Giuseppe · maschile · Italia",
+    },
 }
+
+# La voce indiana maschile resta la scelta di partenza per l'inglese: e'
+# l'accento che l'interlocutore di Mumbai si aspetta di sentire.
 VOCE_PREDEFINITA = "en-IN-PrabhatNeural"
+
+# Paese dedotto dal codice regione del locale (en-IN -> India), per rendere
+# leggibile il nome della voce. Non serve coprire il mondo: per i codici non
+# presenti si mostra il codice stesso, che resta comprensibile.
+PAESI = {
+    "AU": "Australia", "BR": "Brasile", "CA": "Canada", "CH": "Svizzera",
+    "CN": "Cina", "CZ": "Cechia", "DE": "Germania", "DK": "Danimarca",
+    "ES": "Spagna", "FI": "Finlandia", "FR": "Francia", "GB": "Regno Unito",
+    "GR": "Grecia", "HK": "Hong Kong", "IE": "Irlanda", "IL": "Israele",
+    "IN": "India", "IT": "Italia", "JP": "Giappone", "KE": "Kenya",
+    "KR": "Corea", "MX": "Messico", "NG": "Nigeria", "NL": "Paesi Bassi",
+    "NO": "Norvegia", "NZ": "Nuova Zelanda", "PH": "Filippine",
+    "PL": "Polonia", "PT": "Portogallo", "RO": "Romania", "RU": "Russia",
+    "SA": "Arabia Saudita", "SE": "Svezia", "SG": "Singapore",
+    "TR": "Turchia", "TW": "Taiwan", "TZ": "Tanzania", "UA": "Ucraina",
+    "US": "Stati Uniti", "ZA": "Sudafrica",
+}
+
+_GENERI = {"Male": "maschile", "Female": "femminile"}
 
 # La coda e' corta: se la voce non tiene il passo si scarta, perche' sentire la
 # traduzione di tre frasi fa mentre l'altro ha gia' cambiato discorso e' peggio
@@ -231,6 +273,89 @@ class Voce:
                 self.ducka(False)
 
 
+def _descrizione(voce: dict) -> str:
+    """Rende leggibile una voce: 'en-IN-PrabhatNeural' -> 'Prabhat · maschile · India'."""
+    nome = str(voce.get("ShortName", ""))
+    parti = nome.split("-")
+    breve = parti[2] if len(parti) > 2 else nome
+    for suffisso in ("MultilingualNeural", "ExpressiveNeural", "Neural"):
+        if breve.endswith(suffisso):
+            breve = breve[: -len(suffisso)]
+            break
+    genere = _GENERI.get(str(voce.get("Gender", "")), "")
+    regione = parti[1] if len(parti) > 1 else ""
+    pezzi = [breve] + [p for p in (genere, PAESI.get(regione, regione)) if p]
+    return " · ".join(pezzi)
+
+
+def _elenco_online() -> list[dict]:
+    """Interroga edge-tts per l'elenco completo delle voci. Richiede rete."""
+    import edge_tts
+    return list(asyncio.run(edge_tts.list_voices()))
+
+
+def _leggi_cache() -> list[dict] | None:
+    """Legge l'elenco salvato, se non e' troppo vecchio."""
+    try:
+        with open(VOCI_CACHE, encoding="utf-8") as fh:
+            salvato = json.load(fh)
+        quando = float(salvato.get("quando", 0))
+        if time.time() - quando > VOCI_CACHE_GIORNI * 86400:
+            return None
+        return list(salvato.get("voci", []))
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        return None
+
+
+def _scrivi_cache(elenco: list[dict]) -> None:
+    """Salva l'elenco per gli avvii successivi. Un fallimento non e' un problema."""
+    try:
+        VOCI_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = VOCI_CACHE.with_suffix(".json.tmp")
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump({"quando": time.time(), "voci": elenco}, fh, ensure_ascii=False)
+        tmp.replace(VOCI_CACHE)
+    except OSError as exc:
+        print(f"[voce] elenco voci non salvato: {exc}")
+
+
+def elenco_voci(forza: bool = False) -> list[dict]:
+    """Elenco grezzo delle voci: cache su disco, altrimenti rete."""
+    if not forza:
+        salvato = _leggi_cache()
+        if salvato:
+            return salvato
+    try:
+        elenco = _elenco_online()
+    except Exception as exc:                      # noqa: BLE001 - rete assente
+        print(f"[voce] elenco voci non disponibile ({exc}); uso la riserva")
+        return []
+    if elenco:
+        _scrivi_cache(elenco)
+    return elenco
+
+
+def voci_per_lingua(codice: str, forza: bool = False) -> dict[str, str]:
+    """Voci pronunciabili in una lingua: {nome_tecnico: descrizione leggibile}."""
+    elenco = elenco_voci(forza)
+    trovate = {
+        str(v.get("ShortName")): _descrizione(v)
+        for v in elenco
+        if str(v.get("Locale", "")).startswith(f"{codice}-")
+    }
+    if trovate:
+        return dict(sorted(trovate.items(), key=lambda coppia: coppia[1]))
+    return dict(VOCI_FALLBACK.get(codice, {}))
+
+
+def voce_predefinita(codice: str) -> str:
+    """Voce da preselezionare per una lingua, stringa vuota se non ce ne sono."""
+    disponibili = voci_per_lingua(codice)
+    if codice == "en" and VOCE_PREDEFINITA in disponibili:
+        return VOCE_PREDEFINITA
+    return next(iter(disponibili), "")
+
+
 def voci_disponibili() -> dict[str, str]:
-    """Elenco delle voci selezionabili, per l'interfaccia."""
-    return dict(VOCI)
+    """Elenco delle voci selezionabili per l'inglese (compatibilita')."""
+    return voci_per_lingua("en")

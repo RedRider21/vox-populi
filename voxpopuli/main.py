@@ -26,6 +26,7 @@ from gi.repository import GLib, Gtk  # noqa: E402
 
 from . import audio as A
 from . import config as C
+from . import mt
 from . import stt
 from . import tts
 from . import ui
@@ -42,6 +43,7 @@ class Applicazione:
         stile.applica(
             int(self.cfg.get("font_size", 20)),
             int(self.cfg.get("speaker_font_size", 44)),
+            str(self.cfg.get("theme", stile.TEMA_PREDEFINITO)),
         )
 
         self.pannello = ui.FinestraPannello(
@@ -53,6 +55,8 @@ class Applicazione:
             on_half_duplex=self._su_half_duplex,
             on_voce=self._su_voce,
             on_prova_voce=self.prova_voce,
+            on_lingue=self._su_lingue,
+            on_installa_modelli=self.installa_modelli,
         )
         self.speaker = ui.FinestraSpeaker(self.cfg)
         self.speaker.hide()
@@ -98,6 +102,8 @@ class Applicazione:
                 half_duplex=bool(self.cfg.get("half_duplex", True)),
                 modello=self.cfg.get("whisper_model", C.WHISPER_MODEL),
                 on_parlato_locale=self._su_parlato_locale,
+                lingua_mia=str(self.cfg.get("my_lang", C.LANG_IT)),
+                lingua_sua=str(self.cfg.get("their_lang", C.LANG_EN)),
             )
             try:
                 motore.avvia()
@@ -224,6 +230,61 @@ class Applicazione:
         self.cfg["remote_source"] = remoto
         self.cfg["mic_source"] = mic
         C.save(self.cfg)
+
+    def _su_lingue(self, mia: str, sua: str) -> None:
+        """Le lingue sono cambiate: il motore le rilegge solo al prossimo avvio."""
+        if self.motore is not None:
+            self.pannello.mostra_avanzamento(
+                "Lingue cambiate: avranno effetto al prossimo avvio."
+            )
+
+    def installa_modelli(self) -> None:
+        """Scarica i modelli di traduzione mancanti per le due lingue scelte."""
+        mia = str(self.cfg.get("my_lang", C.LANG_IT))
+        sua = str(self.cfg.get("their_lang", C.LANG_EN))
+        if mia == sua:
+            self.pannello.mostra_avanzamento("Le due lingue sono la stessa.")
+            return
+        # Il download dura minuti: in un thread, altrimenti l'interfaccia si
+        # blocca e non si vede nemmeno a che punto e'.
+        threading.Thread(
+            target=self._scarica_modelli, args=(mia, sua), daemon=True,
+        ).start()
+
+    def _scarica_modelli(self, mia: str, sua: str) -> None:
+        """Scarica i pacchetti mancanti per entrambe le direzioni."""
+        def avanza(messaggio: str) -> None:
+            GLib.idle_add(self.pannello.mostra_avanzamento, messaggio)
+
+        servono: list[tuple[str, str]] = []
+        for da, a in ((sua, mia), (mia, sua)):
+            catena = mt.pacchetti_mancanti(da, a)
+            if catena is None:
+                avanza(
+                    f"Non esiste un modello per {C.nome_lingua(da)} → "
+                    f"{C.nome_lingua(a)}."
+                )
+                return
+            for coppia in catena:
+                if coppia not in servono:
+                    servono.append(coppia)
+
+        if not servono:
+            avanza("I modelli per questa coppia di lingue ci sono gia'.")
+            return
+
+        try:
+            riusciti = mt.installa(servono, on_stato=avanza)
+        except mt.MtError as exc:
+            avanza(str(exc))
+            return
+
+        if len(riusciti) == len(servono):
+            avanza("Modelli installati. Le lingue nuove sono pronte.")
+        elif riusciti:
+            avanza(f"Installati {len(riusciti)} modelli su {len(servono)}.")
+        else:
+            avanza("Nessun modello installato: controlla la connessione.")
 
     def _su_half_duplex(self, attivo: bool) -> None:
         self.cfg["half_duplex"] = attivo

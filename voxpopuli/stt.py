@@ -35,6 +35,16 @@ class SttError(RuntimeError):
     """Errore nel caricamento del modello o nella trascrizione."""
 
 
+def _modello_presente(size: str) -> bool:
+    """Vero se il modello e' gia' nella cartella del programma.
+
+    Serve solo a sapere se stiamo per scaricare: il modello arriva da Internet
+    e pesa centinaia di MB, quindi chi avvia il programma deve essere avvisato
+    invece di vedere la macchina ferma per qualche minuto senza spiegazione.
+    """
+    return any(C.WHISPER_DIR.glob(f"models--*--faster-whisper-{size}"))
+
+
 def _get_model(size: str):
     """Carica il modello una volta sola e lo riusa."""
     chiave = (size, C.WHISPER_DEVICE, C.WHISPER_COMPUTE_TYPE)
@@ -46,12 +56,24 @@ def _get_model(size: str):
         raise SttError(
             "faster-whisper non installato. Installa con: pip install faster-whisper"
         ) from exc
+    if not _modello_presente(size):
+        # Una riga sola, ma senza di essa sembra che il programma si sia
+        # piantato: e' il primo avvio e il download puo' durare minuti.
+        print(
+            f"[stt] modello '{size}' assente: lo scarico ora (~465 MB). "
+            f"Succede una volta sola, resta in {C.WHISPER_DIR}.",
+            flush=True,
+        )
     try:
         modello = WhisperModel(
             size,
             device=C.WHISPER_DEVICE,
             compute_type=C.WHISPER_COMPUTE_TYPE,
             cpu_threads=C.WHISPER_CPU_THREADS,
+            # Il modello va nella cartella del programma, non nella cache
+            # condivisa di Hugging Face: cosi' tutti i dati di Vox Populi
+            # stanno insieme e si trovano in un posto solo.
+            download_root=str(C.WHISPER_DIR),
         )
     except Exception as exc:                      # noqa: BLE001 - messaggio all'utente
         raise SttError(

@@ -24,7 +24,8 @@ from gi.repository import GLib, Gtk  # noqa: E402
 
 from .. import audio as A
 from .. import config as C
-from ..tts import VOCE_PREDEFINITA as DEFAULT_VOCE, VOCI as TTS_VOCI
+from ..tts import voce_predefinita, voci_per_lingua
+from . import stile
 
 
 class FinestraPannello(Gtk.Window):
@@ -40,6 +41,8 @@ class FinestraPannello(Gtk.Window):
         on_half_duplex: Callable[[bool], None],
         on_voce: Callable[[bool], None] | None = None,
         on_prova_voce: Callable[[], None] | None = None,
+        on_lingue: Callable[[str, str], None] | None = None,
+        on_installa_modelli: Callable[[], None] | None = None,
     ) -> None:
         super().__init__(title="Vox Populi")
         self.cfg = cfg
@@ -50,6 +53,8 @@ class FinestraPannello(Gtk.Window):
         self._on_half_duplex = on_half_duplex
         self._on_voce = on_voce
         self._on_prova_voce = on_prova_voce
+        self._on_lingue = on_lingue
+        self._on_installa_modelli = on_installa_modelli
         self._in_esecuzione = False
         # I menu hanno liste diverse (monitor e microfoni): invece di fidarsi
         # dell'indice globale, tengo per ogni combo la propria lista. PyGObject
@@ -68,13 +73,10 @@ class FinestraPannello(Gtk.Window):
 
         radice.pack_start(self._crea_intestazione(), False, False, 0)
 
-        # Le due direzioni, in riquadri separati.
-        self._riquadro_remoto = self._crea_riquadro(
-            "LORO · inglese → italiano", "tradotto-remoto",
-        )
-        self._riquadro_locale = self._crea_riquadro(
-            "TU · italiano → inglese", "tradotto-locale",
-        )
+        # Le due direzioni, in riquadri separati. Il testo delle intestazioni
+        # dipende dalle lingue scelte, quindi si riempie dopo.
+        self._riquadro_remoto = self._crea_riquadro("", "tradotto-remoto")
+        self._riquadro_locale = self._crea_riquadro("", "tradotto-locale")
         # I due riquadri si dividono lo spazio disponibile: cosi' il pannello
         # resta leggibile anche quando l'utente lo allarga.
         radice.pack_start(self._riquadro_remoto["contenitore"], True, True, 0)
@@ -86,6 +88,8 @@ class FinestraPannello(Gtk.Window):
         self.connect("delete-event", self._su_chiusura)
         self.connect("configure-event", self._salva_posizione)
         self._aggiorna_sorgenti()
+        self._aggiorna_intestazioni()
+        self._aggiorna_voci()
         self.show_all()
 
     # ------------------------------------------------------------ costruzione ----
@@ -134,7 +138,10 @@ class FinestraPannello(Gtk.Window):
         tradotto.set_selectable(True)
         contenitore.pack_start(tradotto, False, False, 0)
 
-        return {"contenitore": contenitore, "originale": originale, "tradotto": tradotto}
+        return {
+            "contenitore": contenitore, "intestazione": etichetta,
+            "originale": originale, "tradotto": tradotto,
+        }
 
     def _crea_barra(self) -> Gtk.Box:
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -162,6 +169,45 @@ class FinestraPannello(Gtk.Window):
     def _crea_dispositivi(self) -> Gtk.Box:
         contenitore = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         contenitore.get_style_context().add_class("barra")
+
+        # Le due lingue della conversazione. Da queste dipendono le intestazioni
+        # dei riquadri, la voce sintetica e i modelli da scaricare.
+        riga_lingue = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        etichetta_mia = Gtk.Label(label="Parlo:")
+        etichetta_mia.get_style_context().add_class("dettaglio")
+        riga_lingue.pack_start(etichetta_mia, False, False, 0)
+        self._combo_mia = Gtk.ComboBoxText()
+        self._combo_mia.set_tooltip_text("La lingua in cui parli tu")
+        riga_lingue.pack_start(self._combo_mia, True, True, 0)
+
+        etichetta_sua = Gtk.Label(label="Lui parla:")
+        etichetta_sua.get_style_context().add_class("dettaglio")
+        riga_lingue.pack_start(etichetta_sua, False, False, 0)
+        self._combo_sua = Gtk.ComboBoxText()
+        self._combo_sua.set_tooltip_text("La lingua del tuo interlocutore")
+        riga_lingue.pack_start(self._combo_sua, True, True, 0)
+
+        self._pulsante_modelli = Gtk.Button(label="Installa modelli")
+        self._pulsante_modelli.set_tooltip_text(
+            "Scarica i modelli di traduzione mancanti per la coppia di lingue "
+            "scelta (circa 94 MB per lingua)"
+        )
+        self._pulsante_modelli.connect(
+            "clicked", lambda _b: self._installa_modelli(),
+        )
+        riga_lingue.pack_start(self._pulsante_modelli, False, False, 0)
+        contenitore.pack_start(riga_lingue, False, False, 0)
+
+        # L'elenco e' quello di argostranslate, ordinato per nome italiano.
+        for codice, nome in sorted(C.LINGUE.items(), key=lambda coppia: coppia[1]):
+            self._combo_mia.append(codice, nome)
+            self._combo_sua.append(codice, nome)
+        self._combo_mia.set_active_id(str(self.cfg.get("my_lang", C.LANG_IT)))
+        self._combo_sua.set_active_id(str(self.cfg.get("their_lang", C.LANG_EN)))
+        # Il cambio lingua muove parecchie cose: si collega dopo la
+        # preselezione, altrimenti scatterebbe una volta a vuoto all'avvio.
+        self._combo_mia.connect("changed", self._su_cambio_lingua)
+        self._combo_sua.connect("changed", self._su_cambio_lingua)
 
         riga1 = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
         etichetta = Gtk.Label(label="Ascolta:")
@@ -208,12 +254,12 @@ class FinestraPannello(Gtk.Window):
         riga3.pack_start(self._check_voce, False, False, 0)
 
         self._combo_voce = Gtk.ComboBoxText()
-        self._combo_voce.set_tooltip_text("La voce sintetica da usare")
-        for nome, descrizione in TTS_VOCI.items():
-            self._combo_voce.append(nome, f"{nome} ({descrizione})")
-        voce_salvata = str(self.cfg.get("tts_voice", DEFAULT_VOCE))
-        if not self._combo_voce.set_active_id(voce_salvata):
-            self._combo_voce.set_active_id(DEFAULT_VOCE)
+        self._combo_voce.set_tooltip_text(
+            "La voce sintetica da usare: quelle elencate pronunciano la lingua "
+            "dell'interlocutore"
+        )
+        # Il contenuto dipende dalla lingua dell'interlocutore e viene messo
+        # da _aggiorna_voci(), che tiene conto anche del tema scelto.
         self._combo_voce.connect("changed", self._su_cambio_voce)
         # A voce spenta la scelta non ha senso: la si mostra comunque, perche'
         # l'utente veda che esiste, ma non la si lascia toccare.
@@ -233,6 +279,24 @@ class FinestraPannello(Gtk.Window):
         self._etichetta_virtuale.set_xalign(0)
         self._etichetta_virtuale.set_line_wrap(True)
         contenitore.pack_start(self._etichetta_virtuale, False, False, 0)
+
+        riga_tema = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        etichetta_tema = Gtk.Label(label="Colori:")
+        etichetta_tema.get_style_context().add_class("dettaglio")
+        riga_tema.pack_start(etichetta_tema, False, False, 0)
+        self._combo_tema = Gtk.ComboBoxText()
+        self._combo_tema.set_tooltip_text(
+            "Cambia i colori di entrambe le finestre: ha effetto subito"
+        )
+        for chiave, nome in stile.temi_disponibili().items():
+            self._combo_tema.append(chiave, nome)
+        if not self._combo_tema.set_active_id(
+            str(self.cfg.get("theme", stile.TEMA_PREDEFINITO))
+        ):
+            self._combo_tema.set_active_id(stile.TEMA_PREDEFINITO)
+        self._combo_tema.connect("changed", self._su_cambio_tema)
+        riga_tema.pack_start(self._combo_tema, False, False, 0)
+        contenitore.pack_start(riga_tema, False, False, 0)
 
         return contenitore
 
@@ -318,6 +382,79 @@ class FinestraPannello(Gtk.Window):
             self._etichetta_virtuale.set_text(
                 "Voce cambiata: avra' effetto al prossimo avvio."
             )
+
+    def _su_cambio_lingua(self, _widget) -> None:
+        """Cambio di lingua: aggiorna intestazioni e voci, poi avvisa main."""
+        mia = self._combo_mia.get_active_id()
+        sua = self._combo_sua.get_active_id()
+        if not mia or not sua:
+            return
+        if mia == sua:
+            # Tradurre da una lingua a se stessa non significa niente: si dice
+            # e non si applica, invece di lasciare il pannello in uno stato
+            # che sembra funzionante ma non traduce.
+            self._etichetta_errore.set_text("Le due lingue devono essere diverse.")
+            return
+        self._etichetta_errore.set_text("")
+        self.cfg["my_lang"] = mia
+        self.cfg["their_lang"] = sua
+        C.save(self.cfg)
+        self._aggiorna_intestazioni()
+        self._aggiorna_voci()
+        if self._on_lingue is not None:
+            self._on_lingue(mia, sua)
+
+    def _su_cambio_tema(self, combo: Gtk.ComboBoxText) -> None:
+        """Cambio di tema: si applica subito, senza riavviare niente."""
+        tema = combo.get_active_id()
+        if not tema:
+            return
+        self.cfg["theme"] = tema
+        C.save(self.cfg)
+        stile.applica(
+            int(self.cfg.get("font_size", 20)),
+            int(self.cfg.get("speaker_font_size", 44)),
+            tema,
+        )
+
+    def _installa_modelli(self) -> None:
+        if self._on_installa_modelli is not None:
+            self._on_installa_modelli()
+
+    def _aggiorna_intestazioni(self) -> None:
+        """Riscrive le intestazioni dei riquadri con le lingue scelte."""
+        mia = C.nome_lingua(str(self.cfg.get("my_lang", C.LANG_IT)))
+        sua = C.nome_lingua(str(self.cfg.get("their_lang", C.LANG_EN)))
+        self._riquadro_remoto["intestazione"].set_text(f"LORO · {sua} → {mia}")
+        self._riquadro_locale["intestazione"].set_text(f"TU · {mia} → {sua}")
+
+    def _aggiorna_voci(self) -> None:
+        """Ripopola il menu delle voci per la lingua dell'interlocutore.
+
+        La voce sintetica pronuncia cio' che l'interlocutore deve sentire,
+        quindi dev'essere della SUA lingua: cambiando quella, le voci di
+        prima non servono piu'.
+        """
+        sua = str(self.cfg.get("their_lang", C.LANG_EN))
+        voci = voci_per_lingua(sua)
+        self._combo_voce.handler_block_by_func(self._su_cambio_voce)
+        self._combo_voce.remove_all()
+        for nome, descrizione in voci.items():
+            self._combo_voce.append(nome, descrizione)
+        if not voci:
+            self._combo_voce.append("", f"nessuna voce per {C.nome_lingua(sua)}")
+        # La voce salvata puo' appartenere alla lingua precedente: in quel caso
+        # si ripiega su quella predefinita della lingua nuova.
+        if not self._combo_voce.set_active_id(str(self.cfg.get("tts_voice", ""))):
+            predefinita = voce_predefinita(sua)
+            if predefinita:
+                self._combo_voce.set_active_id(predefinita)
+                self.cfg["tts_voice"] = predefinita
+        self._combo_voce.handler_unblock_by_func(self._su_cambio_voce)
+
+    def mostra_avanzamento(self, messaggio: str) -> None:
+        """Messaggio informativo (download dei modelli, stato della voce)."""
+        self._etichetta_errore.set_text(messaggio)
 
     def _prova_voce(self) -> None:
         if self._on_prova_voce is not None:

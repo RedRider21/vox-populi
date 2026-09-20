@@ -80,6 +80,7 @@ class FinestraSpeaker(Gtk.Window):
         etichetta.set_selectable(False)
         self._etichette.append(etichetta)
         self._contenuto.pack_start(etichetta, False, False, 0)
+        etichetta.show()      # i widget nascono nascosti in GTK
 
         # Oltre il massimo si scarta la piu' vecchia: lo storico serve a
         # rileggere, non a ricostruire l'intera conversazione.
@@ -89,7 +90,10 @@ class FinestraSpeaker(Gtk.Window):
             self._contenuto.remove(vecchia)
 
         self._ridisegna()
-        self.show_all()
+        # Non show_all(): renderebbe di nuovo visibile la scritta d'attesa
+        # appena nascosta, e resterebbe in fondo alla finestra per tutta la
+        # conversazione. I nuovi widget vengono mostrati uno per uno.
+        self.show()
 
     def sostituisci_ultima(self, testo: str) -> None:
         """Riscrive l'ultima frase (usato quando una traduzione viene rifinita)."""

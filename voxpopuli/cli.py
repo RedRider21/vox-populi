@@ -68,13 +68,24 @@ def cmd_diagnosi(_args: argparse.Namespace) -> int:
         _ok("pactl e parec")
 
     print("\n=== Modelli di traduzione ===")
-    coppie = mt.lingue_disponibili()
-    for coppia in ((C.LANG_IT, C.LANG_EN), (C.LANG_EN, C.LANG_IT)):
-        if coppia in coppie:
-            _ok(f"{coppia[0]} -> {coppia[1]}")
-        else:
-            _ko(f"{coppia[0]} -> {coppia[1]} mancante")
+    installate = sorted(mt.lingue_installate())
+    print(f"    lingue installate: {', '.join(installate) or 'nessuna'}")
+    cfg = C.load()
+    mia = str(cfg.get("my_lang", C.LANG_IT))
+    sua = str(cfg.get("their_lang", C.LANG_EN))
+    for da, a in ((sua, mia), (mia, sua)):
+        cammino = mt.percorso(da, a)
+        if cammino is None:
+            mancanti = mt.pacchetti_mancanti(da, a) or []
+            dettaglio = ", ".join(f"{x}->{y}" for x, y in mancanti) or "non disponibile"
+            _ko(f"{C.nome_lingua(da)} -> {C.nome_lingua(a)} mancante ({dettaglio})")
             esito = 1
+        elif len(cammino) > 2:
+            # Il passaggio intermedio e' legittimo, ma vale la pena dirlo:
+            # allunga la traduzione e puo' introdurre qualche imprecisione.
+            _ok(f"{' -> '.join(cammino)} (passa per {C.nome_lingua(cammino[1])})")
+        else:
+            _ok(" -> ".join(cammino))
 
     print("\n=== Modello di trascrizione ===")
     try:
@@ -148,8 +159,12 @@ def cmd_file(args: argparse.Namespace) -> int:
     if campioni is None or campioni.size == 0:
         return 1
 
-    da, a = (mt.direzione_locale() if args.lingua == C.LANG_IT
-             else mt.direzione_remota())
+    # Il file e' nella lingua indicata: si traduce verso l'altra delle due
+    # lingue configurate, qualunque essa sia.
+    cfg = C.load()
+    mia = str(cfg.get("my_lang", C.LANG_IT))
+    sua = str(cfg.get("their_lang", C.LANG_EN))
+    da, a = (mia, sua) if args.lingua == mia else (sua, mia)
     durata = campioni.size / C.SAMPLE_RATE
     print(f"\nFile: {args.percorso} ({durata:.1f}s, lingua {da})")
 
@@ -157,7 +172,7 @@ def cmd_file(args: argparse.Namespace) -> int:
     # chiamata misura il caricamento (~3 s per argos) e non la traduzione.
     # Nell'app reale il processo resta vivo e paga questo costo una volta sola.
     t_prep_stt = stt.prepara()
-    t_prep_mt = mt.prepara()
+    t_prep_mt = mt.prepara(mia, sua)
 
     inizio = time.perf_counter()
     try:
@@ -249,7 +264,8 @@ def costruisci_parser() -> argparse.ArgumentParser:
     p_file = sub.add_parser("file", help="trascrive e traduce un file audio")
     p_file.add_argument("percorso")
     p_file.add_argument("lingua", nargs="?", default=C.LANG_EN,
-                        choices=[C.LANG_IT, C.LANG_EN])
+                        choices=sorted(C.LINGUE),
+                        help="lingua parlata nel file")
     p_file.set_defaults(func=cmd_file)
 
     p_live = sub.add_parser("live", help="cattura dal vivo e stampa a terminale")
