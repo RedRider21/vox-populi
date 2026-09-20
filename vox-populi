@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: MIT
+# Copyright (C) 2026 Daniele Deplano (RedRider21)
+#
+# Avvia Vox Populi. Uso:
+#     ./vox-populi                 pannello e finestra da condividere
+#     ./vox-populi --avvia         avvia subito la cattura, senza premere Avvia
+#
+# Questo script esiste solo per non dover ricordare il nome del modulo: fa
+# esattamente quello che farebbe "python3 -m voxpopuli.main", ma dalla
+# cartella giusta qualunque sia la posizione da cui lo si lancia.
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT_DIR"
+
+if ! python3 -c "import gi" 2>/dev/null; then
+    echo "Manca PyGObject (python3-gi). Esegui prima ./install.sh" >&2
+    exit 1
+fi
+
+exec python3 -m voxpopuli.main "$@"

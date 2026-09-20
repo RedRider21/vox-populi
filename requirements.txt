@@ -1,0 +1,22 @@
+# Dipendenze Python di Vox Populi.
+#
+# I pacchetti di sistema NON si installano da qui, vedi install.sh:
+#   python3-gi / gir1.2-gtk-3.0   interfaccia grafica
+#   pulseaudio-utils              parec e pactl per la cattura audio
+#   ffmpeg                        lettura dei formati compressi nel comando "file"
+#
+# Installazione:  pip install -r requirements.txt
+
+# Trascrizione vocale, gira su CPU senza GPU e senza chiavi API.
+faster-whisper==0.10.0
+ctranslate2==4.8.2
+
+# Traduzione neurale offline, con i modelli it<->en installati da install.sh.
+argostranslate==1.11.0
+
+# NumPy per il rilevatore di attivita' vocale.
+numpy>=1.24
+
+# Riproduzione della voce sintetica sul dispositivo virtuale (fase 4).
+sounddevice>=0.4.6
+edge-tts==7.2.8
