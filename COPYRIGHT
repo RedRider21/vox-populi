@@ -1,0 +1,56 @@
+Vox Populi
+Copyright (C) 2026 Daniele Deplano (RedRider21)
+
+Il codice sorgente ORIGINALE di Vox Populi (in particolare: i moduli in
+voxpopuli/, l'interfaccia GTK3, la pipeline di cattura e inferenza, il
+microfono virtuale, gli script install.sh e vox-populi, la documentazione e i
+grafici) è software libero: puoi ridistribuirlo e/o modificarlo secondo i
+termini della GNU Affero General Public License, versione 3 o (a tua scelta)
+una versione successiva, come pubblicata dalla Free Software Foundation.
+
+Il testo completo della licenza è nel file LICENSE.
+Identificatore SPDX:  AGPL-3.0-or-later
+
+Doppia licenza: il titolare, che detiene il 100% dei diritti sul codice
+originale, rende disponibile in alternativa all'AGPLv3 una LICENZA COMMERCIALE
+per usi che non possono o non intendono rispettare gli obblighi di copyleft
+(vedi COMMERCIAL.md).
+
+Questo programma è distribuito nella speranza che sia utile, ma SENZA ALCUNA
+GARANZIA; senza neppure la garanzia implicita di COMMERCIABILITÀ o IDONEITÀ PER
+UN PARTICOLARE SCOPO. Vedi la GNU Affero General Public License per maggiori
+dettagli.
+
+--------------------------------------------------------------------------------
+Componenti di terze parti
+
+Vox Populi NON include né ridistribuisce codice di terzi: le librerie che usa
+vengono installate separatamente dall'utente, con pip o con il gestore di
+pacchetti della distribuzione, e restano soggette alla PROPRIA licenza e al
+proprio copyright. La licenza qui sopra si applica esclusivamente al codice
+originale di Vox Populi.
+
+Le dipendenze principali e le rispettive licenze:
+
+  faster-whisper      MIT
+  ctranslate2         MIT
+  argostranslate      MIT
+  sounddevice         MIT
+  numpy               BSD-3-Clause
+  edge-tts            LGPL-3.0
+  PyGObject (python3-gi)  LGPL-2.1-or-later
+  GTK 3               LGPL-2.1-or-later
+  PulseAudio (pactl, parec)  LGPL-2.1-or-later
+  FFmpeg              LGPL/GPL, secondo la build adottata
+
+Nessuna di queste licenze impone obblighi incompatibili con l'AGPLv3.
+
+I modelli di trascrizione e traduzione (faster-whisper small, i modelli
+argostranslate it<->en) non sono ridistribuiti con il programma: vengono
+scaricati dall'utente e restano soggetti alle licenze dei rispettivi progetti.
+
+--------------------------------------------------------------------------------
+Marchi
+
+Il nome «Vox Populi» e l'identità visiva del progetto appartengono a Daniele
+Deplano (RedRider21) e NON sono concessi dalla licenza del software.

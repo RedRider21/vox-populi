@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 Daniele Deplano (RedRider21)
 """Segmentazione del parlato: dal flusso audio continuo alle singole frasi.
 

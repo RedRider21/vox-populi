@@ -178,7 +178,10 @@ vox-populi
 ├── docs/guida-call.md   promemoria passo-passo per il giorno della call
 ├── tools/               script di collaudo della cattura audio
 ├── install.sh
-└── requirements.txt
+├── requirements.txt
+├── LICENSE              GNU AGPL v3.0
+├── COPYRIGHT            attribuzione e licenze delle dipendenze
+└── COMMERCIAL.md        licenza commerciale alternativa
 ```
 
 Le preferenze (dispositivi scelti, dimensione del carattere, posizione delle
@@ -225,4 +228,16 @@ indici, poi `pactl unload-module <indice>`.
 
 ## Licenza
 
-MIT — vedi il file `LICENSE`.
+Vox Populi è software libero distribuito sotto **GNU Affero General Public
+License v3.0 o successiva** (`AGPL-3.0-or-later`): puoi usarlo, studiarlo,
+modificarlo e ridistribuirlo, a condizione di rispettare gli obblighi di
+copyleft — ogni opera derivata resta sotto la stessa licenza, e chi offre il
+programma come servizio in rete deve rendere disponibile il sorgente ai propri
+utenti.
+
+In alternativa è disponibile una **licenza commerciale** per chi vuole
+integrare o distribuire Vox Populi in prodotti o servizi proprietari, senza
+gli obblighi dell'AGPLv3: vedi [`COMMERCIAL.md`](COMMERCIAL.md).
+
+Il testo completo è in [`LICENSE`](LICENSE), l'attribuzione in
+[`COPYRIGHT`](COPYRIGHT).

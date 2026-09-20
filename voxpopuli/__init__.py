@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: MIT
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 Daniele Deplano (RedRider21)
 """Vox Populi - sottotitoli e voce tradotti in tempo reale per Google Meet.
 
